@@ -1,7 +1,7 @@
 import { AxiosRequestConfig } from 'axios';
 import { useEffect, useState } from 'react';
 
-import { failure, loading, notAsked, RemoteData, RemoteDataResult, success } from '../libs/schema';
+import { failure, loading, notAsked, RemoteData, RemoteDataResult, success } from '../libs/remoteData';
 import { axiosInstance } from './instance';
 
 export async function service<S = any, F = any>(config: AxiosRequestConfig): Promise<RemoteDataResult<S, F>> {
