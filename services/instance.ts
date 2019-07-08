@@ -1,10 +1,11 @@
 import axios from 'axios';
 
-import { baseURL } from './constants';
-
 export const axiosInstance = axios.create({
-    baseURL,
     headers: {
         'Content-Type': 'application/json',
     },
 });
+
+export function setInstanceBaseURL(baseURL: string) {
+    axiosInstance.defaults.baseURL = baseURL;
+}
