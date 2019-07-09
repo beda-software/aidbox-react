@@ -1,7 +1,11 @@
 import { AxiosRequestConfig } from 'axios';
+import _ from 'lodash';
 import { useEffect, useState } from 'react';
 
-import { failure, loading, notAsked, RemoteData, RemoteDataResult, success } from '../libs/remoteData';
+import { AidboxResource, Bundle } from 'src/contrib/aidbox';
+
+import { failure, isSuccess, loading, notAsked, RemoteData, RemoteDataResult, success } from '../libs/remoteData';
+import { getFHIRResources, SearchParams } from './fhir';
 import { axiosInstance } from './instance';
 
 export async function service<S = any, F = any>(config: AxiosRequestConfig): Promise<RemoteDataResult<S, F>> {
@@ -32,4 +36,30 @@ export function effectService<S = any, F = any>(
     }, deps.concat(reloadsCount));
 
     return [remoteData, () => setReloadsCount((count) => count + 1)];
+}
+
+export function effectPager<T extends AidboxResource>(
+    resourceType: T['resourceType'],
+    resourcesOnPage: number = 15,
+    searchParams: SearchParams = {}
+): [RemoteData<Bundle<T>>, { loadNext: () => void; hasNext: boolean }] {
+    const [pageToLoad, setPageToLoad] = useState(1);
+
+    const [resources] = getFHIRResources(
+        resourceType,
+        {
+            ...searchParams,
+            _count: resourcesOnPage,
+            _page: pageToLoad,
+        },
+        [pageToLoad]
+    );
+
+    return [
+        resources,
+        {
+            loadNext: () => setPageToLoad((currentPage) => currentPage + 1),
+            hasNext: isSuccess(resources) && !!_.find(resources.data.link, { relation: 'next' }),
+        },
+    ];
 }
