@@ -131,7 +131,7 @@ export function saveFHIRResources<R extends AidboxResource>(resources: R[], bund
                 },
             })),
         },
-    });
+    })[0];
 }
 
 export function deleteFHIRResource<R extends AidboxResource>(resource: AidboxReference<R>): RemoteData<R> {
