@@ -2,8 +2,8 @@ import _ from 'lodash';
 
 import { AidboxReference, AidboxResource, Bundle } from 'src/contrib/aidbox';
 
-import { failure, RemoteData } from '../libs/remoteData';
-import { effectService } from './service';
+import { failure } from '../libs/remoteData';
+import { effectAdapter, effectService, service } from './service';
 
 export type SearchParam<T> = T | T[] | undefined;
 
@@ -81,17 +81,18 @@ function getInactiveSearchParam(resourceType: string) {
     return {};
 }
 
+export async function getFHIRResourceAsync<R extends AidboxResource>(reference: AidboxReference<R>) {
+    return service({
+        method: 'GET',
+        url: `/${reference.resourceType}/${reference.id}`,
+    });
+}
+
 export function getFHIRResource<R extends AidboxResource>(
     reference: AidboxReference<R>,
     deps: ReadonlyArray<any> = []
 ) {
-    return effectService<R>(
-        {
-            method: 'GET',
-            url: `/${reference.resourceType}/${reference.id}`,
-        },
-        deps
-    );
+    return effectAdapter<R>(() => getFHIRResourceAsync(reference), deps);
 }
 
 export function getFHIRResources<R extends AidboxResource>(
@@ -109,16 +110,23 @@ export function getFHIRResources<R extends AidboxResource>(
     );
 }
 
-export function saveFHIRResource<R extends AidboxResource>(resource: R) {
-    return effectService<R>({
+export async function saveFHIRResourceAsync<R extends AidboxResource>(resource: R) {
+    return service({
         method: resource.id ? 'PUT' : 'POST',
         data: resource,
         url: `/${resource.resourceType}${resource.id ? '/' + resource.id : ''}`,
-    })[0];
+    });
 }
 
-export function saveFHIRResources<R extends AidboxResource>(resources: R[], bundleType: 'transaction' | 'batch') {
-    return effectService<Bundle<R>>({
+export function saveFHIRResource<R extends AidboxResource>(resource: R) {
+    return effectAdapter<R>(() => saveFHIRResourceAsync(resource))[0];
+}
+
+export async function saveFHIRResourcesAsync<R extends AidboxResource>(
+    resources: R[],
+    bundleType: 'transaction' | 'batch'
+) {
+    return service({
         method: 'POST',
         url: '/',
         data: {
@@ -131,10 +139,14 @@ export function saveFHIRResources<R extends AidboxResource>(resources: R[], bund
                 },
             })),
         },
-    })[0];
+    });
 }
 
-export function deleteFHIRResource<R extends AidboxResource>(resource: AidboxReference<R>): RemoteData<R> {
+export function saveFHIRResources<R extends AidboxResource>(resources: R[], bundleType: 'transaction' | 'batch') {
+    return effectAdapter<Bundle<R>>(() => saveFHIRResourcesAsync(resources, bundleType))[0];
+}
+
+export async function deleteFHIRResourceAsync<R extends AidboxResource>(resource: AidboxReference<R>) {
     const inactiveMappingItem = inactiveMapping[resource.resourceType];
 
     if (!inactiveMappingItem) {
@@ -143,22 +155,26 @@ export function deleteFHIRResource<R extends AidboxResource>(resource: AidboxRef
         return failure({});
     }
 
-    return effectService<R>({
+    return service({
         method: 'PATCH',
         url: `/${resource.resourceType}/${resource.id}`,
         data: {
             [inactiveMappingItem.statusField]: inactiveMappingItem.value,
         },
-    })[0];
+    });
 }
 
-export function getReference<T extends AidboxResource & { id: string }>(
+export function deleteFHIRResource<R extends AidboxResource>(resource: AidboxReference<R>) {
+    return effectAdapter<R>(() => deleteFHIRResourceAsync(resource))[0];
+}
+
+export function getReference<T extends AidboxResource>(
     resource: T,
     display?: string
 ): AidboxReference<T> {
     return {
         resourceType: resource.resourceType,
-        id: resource.id,
+        id: resource.id!,
         display,
     };
 }

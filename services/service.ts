@@ -4,8 +4,27 @@ import { useEffect, useState } from 'react';
 
 import { AidboxResource, Bundle } from 'src/contrib/aidbox';
 
-import { failure, isSuccess, loading, notAsked, RemoteData, RemoteDataResult, success } from '../libs/remoteData';
-import { getFHIRResources, SearchParams } from './fhir';
+import {
+    failure,
+    isFailure,
+    isSuccess,
+    loading,
+    notAsked,
+    RemoteData,
+    RemoteDataResult,
+    success,
+} from '../libs/remoteData';
+import {
+    deleteFHIRResourceAsync,
+    extractBundleResources,
+    getFHIRResourceAsync,
+    getFHIRResources,
+    getReference,
+    makeReference,
+    saveFHIRResourceAsync,
+    saveFHIRResourcesAsync,
+    SearchParams,
+} from './fhir';
 import { axiosInstance } from './instance';
 
 export async function service<S = any, F = any>(config: AxiosRequestConfig): Promise<RemoteDataResult<S, F>> {
@@ -18,8 +37,8 @@ export async function service<S = any, F = any>(config: AxiosRequestConfig): Pro
     }
 }
 
-export function effectService<S = any, F = any>(
-    config: AxiosRequestConfig,
+export function effectAdapter<S = any, F = any>(
+    asyncFunction: () => Promise<RemoteDataResult<S, F>>,
     deps: ReadonlyArray<any> = []
 ): [RemoteData<S, F>, () => void] {
     const [remoteData, setRemoteData] = useState<RemoteData<S, F>>(notAsked);
@@ -30,12 +49,19 @@ export function effectService<S = any, F = any>(
     useEffect(() => {
         (async () => {
             setRemoteData(loading);
-            const response: RemoteDataResult<S, F> = await service(config);
+            const response: RemoteDataResult<S, F> = await asyncFunction();
             setRemoteData(response);
         })();
     }, deps.concat(reloadsCount));
 
     return [remoteData, () => setReloadsCount((count) => count + 1)];
+}
+
+export function effectService<S = any, F = any>(
+    config: AxiosRequestConfig,
+    deps: ReadonlyArray<any> = []
+): [RemoteData<S, F>, () => void] {
+    return effectAdapter(async () => service(config), deps);
 }
 
 export function effectPager<T extends AidboxResource>(
@@ -60,6 +86,69 @@ export function effectPager<T extends AidboxResource>(
         {
             loadNext: () => setPageToLoad((currentPage) => currentPage + 1),
             hasNext: isSuccess(resources) && !!_.find(resources.data.link, { relation: 'next' }),
+        },
+    ];
+}
+
+export function effectCRUD<T extends AidboxResource>(
+    resourceType: T['resourceType'],
+    id?: string,
+    getOrCreate?: boolean,
+    defaultResource?: Partial<T>
+): [
+    RemoteData<T>,
+    {
+        onSave: (updatedResource: T) => void;
+        onDelete: (resourceToDelete: T) => void;
+    }
+] {
+    const [remoteData, setRemoteData] = useState<RemoteData<T>>(notAsked);
+
+    const makeDefaultResource = () => ({
+        resourceType,
+        ...(id && getOrCreate ? { id } : {}),
+        ...defaultResource,
+    });
+
+    useEffect(() => {
+        (async () => {
+            if (id) {
+                setRemoteData(loading);
+                const response = await getFHIRResourceAsync<T>(makeReference(resourceType, id));
+                if (isFailure(response) && getOrCreate) {
+                    setRemoteData(success(makeDefaultResource() as T));
+                } else {
+                    setRemoteData(response);
+                }
+            } else {
+                setRemoteData(success(makeDefaultResource() as T));
+            }
+        })();
+    }, []);
+
+    return [
+        remoteData,
+        {
+            onSave: async (updatedResource: T, relatedResources?: AidboxResource[]) => {
+                setRemoteData(loading);
+                if (relatedResources && relatedResources.length) {
+                    const bundleResponse = await saveFHIRResourcesAsync(
+                        [updatedResource, ...relatedResources],
+                        'transaction'
+                    );
+                    if (isSuccess(bundleResponse)) {
+                        setRemoteData(extractBundleResources(bundleResponse.data)[resourceType][0]);
+                    } else {
+                        setRemoteData(bundleResponse);
+                    }
+                } else {
+                    setRemoteData(await saveFHIRResourceAsync(updatedResource));
+                }
+            },
+            onDelete: async (resourceToDelete: T) => {
+                setRemoteData(loading);
+                setRemoteData(await deleteFHIRResourceAsync(getReference(resourceToDelete)));
+            },
         },
     ];
 }
