@@ -64,11 +64,17 @@ export function effectService<S = any, F = any>(
     return effectAdapter(async () => service(config), deps);
 }
 
+export interface PagerControlls {
+    loadNext: () => void,
+    hasNext: boolean,
+    reload: () => void,
+}
+
 export function effectPager<T extends AidboxResource>(
     resourceType: T['resourceType'],
     resourcesOnPage: number = 15,
     searchParams: SearchParams = {}
-): [RemoteData<Bundle<T>>, { loadNext: () => void; hasNext: boolean }] {
+): [RemoteData<Bundle<T>>, PagerControlls] {
     const [pageToLoad, setPageToLoad] = useState(1);
 
     const [resources] = getFHIRResources(
@@ -86,6 +92,7 @@ export function effectPager<T extends AidboxResource>(
         {
             loadNext: () => setPageToLoad((currentPage) => currentPage + 1),
             hasNext: isSuccess(resources) && !!_.find(resources.data.link, { relation: 'next' }),
+            reload: () => setPageToLoad(1),
         },
     ];
 }
