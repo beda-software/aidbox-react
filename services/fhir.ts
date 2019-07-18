@@ -2,14 +2,9 @@ import _ from 'lodash';
 
 import { AidboxReference, AidboxResource, Bundle } from 'src/contrib/aidbox';
 
-import { failure } from '../libs/remoteData';
-import { effectAdapter, effectService, service } from './service';
-
-export type SearchParam<T> = T | T[] | undefined;
-
-export interface SearchParams {
-    [key: string]: SearchParam<string | number | boolean>;
-}
+import { failure, RemoteDataResult } from '../libs/remoteData';
+import { service } from './service';
+import { SearchParams } from './search';
 
 interface InactiveMappingItem {
     searchField: string;
@@ -81,36 +76,27 @@ function getInactiveSearchParam(resourceType: string) {
     return {};
 }
 
-export async function getFHIRResourceAsync<R extends AidboxResource>(reference: AidboxReference<R>) {
+export async function getFHIRResource<R extends AidboxResource>(
+    reference: AidboxReference<R>
+): Promise<RemoteDataResult<R>> {
     return service({
         method: 'GET',
         url: `/${reference.resourceType}/${reference.id}`,
     });
 }
 
-export function getFHIRResource<R extends AidboxResource>(
-    reference: AidboxReference<R>,
-    deps: ReadonlyArray<any> = []
-) {
-    return effectAdapter<R>(() => getFHIRResourceAsync(reference), deps);
-}
-
-export function getFHIRResources<R extends AidboxResource>(
+export async function getFHIRResources<R extends AidboxResource>(
     resourceType: R['resourceType'],
-    params: SearchParams,
-    deps: ReadonlyArray<any> = []
-) {
-    return effectService<Bundle<R>>(
-        {
-            method: 'GET',
-            url: `/${resourceType}`,
-            params: { ...params, ...getInactiveSearchParam(resourceType) },
-        },
-        deps
-    );
+    params: SearchParams
+): Promise<RemoteDataResult<Bundle<R>>> {
+    return service({
+        method: 'GET',
+        url: `/${resourceType}`,
+        params: { ...params, ...getInactiveSearchParam(resourceType) },
+    });
 }
 
-export async function saveFHIRResourceAsync<R extends AidboxResource>(resource: R) {
+export async function saveFHIRResource<R extends AidboxResource>(resource: R): Promise<RemoteDataResult<R>> {
     return service({
         method: resource.id ? 'PUT' : 'POST',
         data: resource,
@@ -118,14 +104,10 @@ export async function saveFHIRResourceAsync<R extends AidboxResource>(resource: 
     });
 }
 
-export function saveFHIRResource<R extends AidboxResource>(resource: R) {
-    return effectAdapter<R>(() => saveFHIRResourceAsync(resource))[0];
-}
-
-export async function saveFHIRResourcesAsync<R extends AidboxResource>(
+export async function saveFHIRResources<R extends AidboxResource>(
     resources: R[],
     bundleType: 'transaction' | 'batch'
-) {
+): Promise<RemoteDataResult<Bundle<R>>> {
     return service({
         method: 'POST',
         url: '/',
@@ -142,11 +124,9 @@ export async function saveFHIRResourcesAsync<R extends AidboxResource>(
     });
 }
 
-export function saveFHIRResources<R extends AidboxResource>(resources: R[], bundleType: 'transaction' | 'batch') {
-    return effectAdapter<Bundle<R>>(() => saveFHIRResourcesAsync(resources, bundleType))[0];
-}
-
-export async function deleteFHIRResourceAsync<R extends AidboxResource>(resource: AidboxReference<R>) {
+export async function deleteFHIRResource<R extends AidboxResource>(
+    resource: AidboxReference<R>
+): Promise<RemoteDataResult<R>> {
     const inactiveMappingItem = inactiveMapping[resource.resourceType];
 
     if (!inactiveMappingItem) {
@@ -164,14 +144,7 @@ export async function deleteFHIRResourceAsync<R extends AidboxResource>(resource
     });
 }
 
-export function deleteFHIRResource<R extends AidboxResource>(resource: AidboxReference<R>) {
-    return effectAdapter<R>(() => deleteFHIRResourceAsync(resource))[0];
-}
-
-export function getReference<T extends AidboxResource>(
-    resource: T,
-    display?: string
-): AidboxReference<T> {
+export function getReference<T extends AidboxResource>(resource: T, display?: string): AidboxReference<T> {
     return {
         resourceType: resource.resourceType,
         id: resource.id!,
@@ -194,7 +167,7 @@ export function makeReference<T extends AidboxResource>(
 export function extractBundleResources<T extends AidboxResource>(
     bundle: Bundle<T>
 ): { [P in T['resourceType']]: T[] | undefined } {
-    const entriesByResourceType = _.groupBy(bundle.entry, (entry) => _.get(entry, ['resource', 'resourceType']));
+    const entriesByResourceType = _.groupBy(bundle.entry, (entry) => entry.resource!.resourceType);
 
     return _.mapValues(entriesByResourceType, (entries) => _.map(entries, (entry) => entry.resource!));
 }
