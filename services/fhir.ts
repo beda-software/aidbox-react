@@ -164,9 +164,8 @@ export function makeReference<T extends AidboxResource>(
     };
 }
 
-export function extractBundleResources<T extends AidboxResource>(
-    bundle: Bundle<T>
-): { [P in T['resourceType']]: T[] | undefined } {
+export type ResourcesMap<T extends AidboxResource> = { [P in T['resourceType']]: T[] | undefined };
+export function extractBundleResources<T extends AidboxResource>(bundle: Bundle<T>): ResourcesMap<T> {
     const entriesByResourceType = _.groupBy(bundle.entry, (entry) => entry.resource!.resourceType);
 
     return _.mapValues(entriesByResourceType, (entries) => _.map(entries, (entry) => entry.resource!));
