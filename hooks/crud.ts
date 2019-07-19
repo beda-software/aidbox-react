@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { AidboxResource } from 'src/contrib/aidbox';
-import { isFailure, isSuccess, loading, notAsked, RemoteData, success } from '../libs/remoteData';
+import { isFailure, isSuccess, loading, notAsked, RemoteData, success, failure } from '../libs/remoteData';
 import {
     deleteFHIRResource,
     extractBundleResources,
@@ -13,7 +13,7 @@ import {
 } from '../services/fhir';
 
 export interface CRUDManager<T> {
-    handleSave: (updatedResource: T) => void;
+    handleSave: (updatedResource: T) => Promise<RemoteData<T>>;
     handleDelete: (resourceToDelete: T) => void;
 }
 
@@ -51,6 +51,8 @@ export function useCRUD<T extends AidboxResource>(
         remoteData,
         {
             handleSave: async (updatedResource: T, relatedResources?: AidboxResource[]) => {
+                // Why do we need relatedResource here?
+                // TODO refactor
                 setRemoteData(loading);
                 if (relatedResources && relatedResources.length) {
                     const bundleResponse = await saveFHIRResources(
@@ -58,12 +60,22 @@ export function useCRUD<T extends AidboxResource>(
                         'transaction'
                     );
                     if (isSuccess(bundleResponse)) {
-                        setRemoteData(extractBundleResources(bundleResponse.data)[resourceType][0]);
+                        const extracted = extractBundleResources(bundleResponse.data);
+                        if(extracted) {
+                            const resource = success(extracted[resourceType]![0]! as T);
+                            setRemoteData(resource);
+                            return resource;
+                        } else {
+                            return failure({"message": "empty response from server"})
+                        }
                     } else {
                         setRemoteData(bundleResponse);
+                        return bundleResponse;
                     }
                 } else {
-                    setRemoteData(await saveFHIRResource(updatedResource));
+                    const response = await saveFHIRResource(updatedResource)
+                    setRemoteData(response);
+                    return response;
                 }
             },
             handleDelete: async (resourceToDelete: T) => {
