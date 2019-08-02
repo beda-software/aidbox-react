@@ -5,7 +5,6 @@ import {
     failure,
     success,
     isSuccess,
-    RemoteData,
     isFailure
 } from '../libs/remoteData';
 import { axiosInstance } from './instance';
@@ -21,9 +20,9 @@ export async function service<S = any, F = any>(config: AxiosRequestConfig): Pro
 }
 
 export async function applyDataTransformer<S = any, F = any, R = any>(
-    servicePromise: Promise<RemoteData<S, F>>,
+    servicePromise: Promise<RemoteDataResult<S, F>>,
     transformer: (data: S) => R
-): Promise<RemoteData<R, F>> {
+): Promise<RemoteDataResult<R, F>> {
     const response = await servicePromise;
 
     if (isSuccess(response)) {
@@ -34,9 +33,9 @@ export async function applyDataTransformer<S = any, F = any, R = any>(
 }
 
 export async function applyErrorTransformer<S = any, F = any, R = any>(
-    servicePromise: Promise<RemoteData<S, F>>,
+    servicePromise: Promise<RemoteDataResult<S, F>>,
     transformer: (error: F) => R
-): Promise<RemoteData<S, R>> {
+): Promise<RemoteDataResult<S, R>> {
     const response = await servicePromise;
 
     if (isFailure(response)) {
