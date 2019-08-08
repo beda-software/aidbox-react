@@ -20,6 +20,7 @@ export const axiosInstance = axios.create({
     paramsSerializer: buildQueryParams,
     headers: {
         'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
     },
 });
 
