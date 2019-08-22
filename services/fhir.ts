@@ -87,11 +87,12 @@ export async function getFHIRResource<R extends AidboxResource>(
 
 export async function getFHIRResources<R extends AidboxResource>(
     resourceType: R['resourceType'],
-    params: SearchParams
+    params: SearchParams,
+    extraPath?: string
 ): Promise<RemoteDataResult<Bundle<R>>> {
     return service({
         method: 'GET',
-        url: `/${resourceType}`,
+        url: extraPath ? `/${resourceType}/${extraPath}` : `/${resourceType}`,
         params: { ...params, ...getInactiveSearchParam(resourceType) },
     });
 }
