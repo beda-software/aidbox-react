@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-import { AidboxReference, AidboxResource, Bundle } from 'src/contrib/aidbox';
+import { AidboxReference, AidboxResource, Bundle, ValueSet } from 'src/contrib/aidbox';
 
 import { failure, RemoteDataResult } from '../libs/remoteData';
 import { service } from './service';
@@ -170,4 +170,12 @@ export function extractBundleResources<T extends AidboxResource>(bundle: Bundle<
     const entriesByResourceType = _.groupBy(bundle.entry, (entry) => entry.resource!.resourceType);
 
     return _.mapValues(entriesByResourceType, (entries) => _.map(entries, (entry) => entry.resource!));
+}
+
+export function getConcepts(valueSetId: string, params?: SearchParams):Promise<RemoteDataResult<ValueSet>>  {
+    return service({
+        method: 'GET',
+        url: `/ValueSet/${valueSetId}/$expand`,
+        params: { ...params },
+    });
 }
