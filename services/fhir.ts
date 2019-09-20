@@ -165,6 +165,22 @@ export function makeReference<T extends AidboxResource>(
     };
 }
 
+export function isReference<T extends AidboxResource>(resource: T | AidboxReference<T>): resource is AidboxReference<T> {
+    return _.isEmpty(
+        _.difference(_.keys(resource), [
+            'id',
+            'resourceType',
+            '_id',
+            'resource',
+            'display',
+            'identifier',
+            'uri',
+            'localRef',
+            'extension',
+        ])
+    );
+}
+
 export type ResourcesMap<T extends AidboxResource> = { [P in T['resourceType']]: T[] | undefined };
 export function extractBundleResources<T extends AidboxResource>(bundle: Bundle<T>): ResourcesMap<T> {
     const entriesByResourceType = _.groupBy(bundle.entry, (entry) => entry.resource!.resourceType);
