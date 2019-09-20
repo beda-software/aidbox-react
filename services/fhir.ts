@@ -149,7 +149,7 @@ export function getReference<T extends AidboxResource>(resource: T, display?: st
     return {
         resourceType: resource.resourceType,
         id: resource.id!,
-        display,
+        ...(display ? { display } : {}),
     };
 }
 
@@ -165,7 +165,9 @@ export function makeReference<T extends AidboxResource>(
     };
 }
 
-export function isReference<T extends AidboxResource>(resource: T | AidboxReference<T>): resource is AidboxReference<T> {
+export function isReference<T extends AidboxResource>(
+    resource: T | AidboxReference<T>
+): resource is AidboxReference<T> {
     return _.isEmpty(
         _.difference(_.keys(resource), [
             'id',
@@ -196,7 +198,7 @@ export function getIncludedResource<T extends AidboxResource>(
     return _.find<T>(resources[reference.resourceType], (resource) => resource.id === reference.id);
 }
 
-export function getConcepts(valueSetId: string, params?: SearchParams):Promise<RemoteDataResult<ValueSet>>  {
+export function getConcepts(valueSetId: string, params?: SearchParams): Promise<RemoteDataResult<ValueSet>> {
     return service({
         method: 'GET',
         url: `/ValueSet/${valueSetId}/$expand`,
