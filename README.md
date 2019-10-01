@@ -13,6 +13,7 @@ We consider service as a function that returns `RemoteDataResult<S, F>` (`Remote
 * service({...axiosConfig})
 * FHIR-specific:
   * getFHIRResource(reference)
+  * findFHIRResource(resourceType, params)
   * getFHIRResources(resourceType, params)
   * saveFHIRResource(resource)
   * saveFHIRResources(resources, bundleType)
