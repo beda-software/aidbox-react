@@ -97,6 +97,29 @@ export async function getFHIRResources<R extends AidboxResource>(
     });
 }
 
+export async function findFHIRResource<R extends AidboxResource>(
+    resourceType: R['resourceType'],
+    params: SearchParams,
+    extraPath?: string
+): Promise<RemoteDataResult<R>> {
+    return await service({
+        method: 'GET',
+        url: extraPath ? `/${resourceType}/${extraPath}` : `/${resourceType}`,
+        params: { ...params, ...getInactiveSearchParam(resourceType) },
+        transformResponse: (resp: string) => {
+            const data: Bundle<R> = JSON.parse(resp);
+            const resources = data.entry!;
+            if (resources.length === 1) {
+                return resources[0].resource!;
+            } else if (resources.length === 0) {
+                throw 'No resources found';
+            } else {
+                throw 'Too many resources found';
+            }
+        },
+    });
+}
+
 export async function saveFHIRResource<R extends AidboxResource>(resource: R): Promise<RemoteDataResult<R>> {
     return service({
         method: resource.id ? 'PUT' : 'POST',
