@@ -1,11 +1,16 @@
 import { useEffect, useState } from 'react';
 
-import { loading, notAsked, RemoteData, RemoteDataResult } from '../libs/remoteData';
+import { loading, notAsked, RemoteData, RemoteDataResult, success } from '../libs/remoteData';
+
+interface ServiceManager<S> {
+    reload: () => void;
+    set: (data: S) => void
+}
 
 export function useService<S = any, F = any>(
     asyncFunction: () => Promise<RemoteDataResult<S, F>>,
     deps: ReadonlyArray<any> = []
-): [RemoteData<S, F>, () => void] {
+): [RemoteData<S, F>, ServiceManager<S>] {
     const [remoteData, setRemoteData] = useState<RemoteData<S, F>>(notAsked);
 
     // Use another state variable to trigger effect on demand
@@ -19,5 +24,5 @@ export function useService<S = any, F = any>(
         })();
     }, deps.concat(reloadsCount));
 
-    return [remoteData, () => setReloadsCount((count) => count + 1)];
+    return [remoteData, {reload: () => setReloadsCount((count) => count + 1), set: (data: S) => setRemoteData(success(data))}];
 }
