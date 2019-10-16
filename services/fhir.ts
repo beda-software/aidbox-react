@@ -62,6 +62,11 @@ const inactiveMapping: InactiveMapping = {
         statusField: 'status',
         value: 'entered-in-error',
     },
+    EpisodeOfCare: {
+        searchField: 'status',
+        statusField: 'status',
+        value: 'entered-in-error',
+    },
 };
 
 function getInactiveSearchParam(resourceType: string) {
