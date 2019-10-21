@@ -3,7 +3,7 @@ import _ from 'lodash';
 
 import { Token } from './token';
 
-function buildQueryParams(params: object) {
+export function buildQueryParams(params: object) {
     return _.chain(params)
         .keys()
         .flatMap((k) =>
