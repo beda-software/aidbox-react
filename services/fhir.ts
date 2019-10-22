@@ -153,6 +153,16 @@ export async function saveFHIRResources<R extends AidboxResource>(
     });
 }
 
+export async function patchFHIRResource<R extends AidboxResource>(
+    resource: Partial<R> & Required<Pick<R, 'id' | 'resourceType'>>
+): Promise<RemoteDataResult<R>> {
+    return service({
+        method: 'PATCH',
+        data: resource,
+        url: `/${resource.resourceType}/${resource.id}`,
+    });
+}
+
 export async function deleteFHIRResource<R extends AidboxResource>(
     resource: AidboxReference<R>
 ): Promise<RemoteDataResult<R>> {
