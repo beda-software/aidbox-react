@@ -8,7 +8,8 @@ export function buildQueryParams(params: object) {
         .keys()
         .flatMap((k) =>
             _.map(
-                [].concat(params[k]),
+                _.reject(_.concat([], params[k]), _.isUndefined),
+                // TODO: get rid of _has - wrong usage
                 (v) => encodeURIComponent(k) + (k === '_has' ? ':' : '=') + encodeURIComponent(v)
             )
         )
