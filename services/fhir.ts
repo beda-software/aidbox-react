@@ -3,8 +3,8 @@ import _ from 'lodash';
 import { AidboxReference, AidboxResource, Bundle, ValueSet } from 'src/contrib/aidbox';
 
 import { failure, RemoteDataResult } from '../libs/remoteData';
-import { service } from './service';
 import { SearchParams } from './search';
+import { service } from './service';
 
 interface InactiveMappingItem {
     searchField: string;
@@ -117,9 +117,9 @@ export async function findFHIRResource<R extends AidboxResource>(
             if (resources.length === 1) {
                 return resources[0].resource!;
             } else if (resources.length === 0) {
-                throw 'No resources found';
+                throw new Error('No resources found');
             } else {
-                throw 'Too many resources found';
+                throw new Error('Too many resources found');
             }
         },
     });
@@ -232,7 +232,7 @@ export function isReference<T extends AidboxResource>(
     );
 }
 
-export type ResourcesMap<T extends AidboxResource> = { [P in T['resourceType']]: T[] | undefined };
+export type ResourcesMap<T extends AidboxResource> = { [x: string]: T[] | undefined };
 export function extractBundleResources<T extends AidboxResource>(bundle: Bundle<T>): ResourcesMap<T> {
     const entriesByResourceType = _.groupBy(bundle.entry, (entry) => entry.resource!.resourceType);
 

@@ -22,6 +22,7 @@ export function useService<S = any, F = any>(
             const response: RemoteDataResult<S, F> = await asyncFunction();
             setRemoteData(response);
         })();
+        // eslint-disable-next-line
     }, deps.concat(reloadsCount));
 
     return [remoteData, {reload: () => setReloadsCount((count) => count + 1), set: (data: S) => setRemoteData(success(data))}];

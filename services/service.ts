@@ -1,11 +1,11 @@
 import { AxiosRequestConfig } from 'axios';
 
 import {
-    RemoteDataResult,
     failure,
-    success,
+    isFailure,
     isSuccess,
-    isFailure
+    RemoteDataResult,
+    success
 } from '../libs/remoteData';
 import { axiosInstance } from './instance';
 
