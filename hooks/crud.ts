@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { AidboxResource } from 'src/contrib/aidbox';
-import { isFailure, isSuccess, loading, notAsked, RemoteData, success, failure } from '../libs/remoteData';
+import { failure, isFailure, isSuccess, loading, notAsked, RemoteData, success } from '../libs/remoteData';
 import {
     deleteFHIRResource,
     extractBundleResources,
@@ -64,17 +64,20 @@ export function useCRUD<T extends AidboxResource>(
                         if(extracted) {
                             const resource = success(extracted[resourceType]![0]! as T);
                             setRemoteData(resource);
+
                             return resource;
                         } else {
                             return failure({"message": "empty response from server"})
                         }
                     } else {
                         setRemoteData(bundleResponse);
+
                         return bundleResponse;
                     }
                 } else {
                     const response = await saveFHIRResource(updatedResource)
                     setRemoteData(response);
+
                     return response;
                 }
             },

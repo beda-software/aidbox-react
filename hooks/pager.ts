@@ -1,10 +1,10 @@
+import _ from 'lodash';
 import { useState } from 'react';
-import * as _ from 'lodash';
 
 import { AidboxResource, Bundle } from 'src/contrib/aidbox';
-import { SearchParams } from '../services/search';
 import { isSuccess, RemoteData } from '../libs/remoteData';
 import { getFHIRResources } from '../services/fhir';
+import { SearchParams } from '../services/search';
 import { useService } from './service';
 
 export interface PagerManager {
