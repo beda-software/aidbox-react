@@ -247,6 +247,14 @@ export function getIncludedResource<T extends AidboxResource>(
     return _.find<T>(resources[reference.resourceType], (resource) => resource.id === reference.id);
 }
 
+export function getIncludedResources<T extends AidboxResource>(
+    // TODO: improve type for includedResources: must contain T
+    resources: ResourcesMap<T | any>,
+    resourceType: T['resourceType']
+): T[] {
+    return (resources[resourceType] || []) as T[];
+}
+
 export function getConcepts(valueSetId: string, params?: SearchParams): Promise<RemoteDataResult<ValueSet>> {
     return service({
         method: 'GET',
