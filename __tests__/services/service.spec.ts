@@ -12,6 +12,31 @@ import {
     PromiseRemoteDataResultMap
 } from '../../services/service';
 
+jest.mock('../../services/instance', () => {
+    return {
+        axiosInstance: ({ url }: any) => {
+            switch(url) {
+                case "success": 
+                    return Promise.resolve({
+                        data: 'data-success'
+                    })
+                case "error-message":
+                    return Promise.reject({
+                        message: 'error-message'
+                    })
+                case "error-data":
+                    return Promise.reject({
+                        response: {
+                            data: 'error-data'
+                        }
+                    })
+                default: 
+                    return Promise.reject()
+            }
+        }  
+
+    }
+});
 
 describe('Service `service`', () => {
 
@@ -36,6 +61,29 @@ describe('Service `service`', () => {
             isTransformed: true
         }
     }
+
+    describe('Method `service`', () => {
+        test('returns success response', async () => {
+            const result = <any>await service({ url: 'success' }) 
+
+            expect(result.status).toBe('Success')
+            expect(result.data).toBe('data-success')
+        })
+
+        test('returns failed response', async () => {
+            const result = <any>await service({ url: 'error-data' }) 
+
+            expect(result.status).toBe('Failure')
+            expect(result.error).toBe('error-data')            
+        })
+
+        test('returns failed response', async () => {
+            const result = <any>await service({ url: 'error-message' }) 
+
+            expect(result.status).toBe('Failure')
+            expect(result.error).toBe('error-message')  
+        })
+    })
 
     describe('Method `applyErrorTransformer`', () => {
         test('process failed response', async () => {
