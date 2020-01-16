@@ -17,7 +17,7 @@ export interface BundleEntry<R extends AidboxResource> {
 
 export interface Bundle<R extends AidboxResource> {
     readonly resourceType: "Bundle";
-    id?: id;
+    id?: string;
     entry?: Array<BundleEntry<R>>;
 }
 
@@ -28,6 +28,10 @@ export interface BundleParam {
 
 export interface ValueSet {
     readonly resourceType: "ValueSet";
+}
+
+export interface Meta {    
+    id?: string;
 }
 
 export interface User {
