@@ -12,32 +12,6 @@ import {
     PromiseRemoteDataResultMap
 } from '../../services/service';
 
-jest.mock('../../services/instance', () => {
-    return {
-        axiosInstance: ({ url }: any) => {
-            switch(url) {
-                case "success": 
-                    return Promise.resolve({
-                        data: 'data-success'
-                    })
-                case "error-message":
-                    return Promise.reject({
-                        message: 'error-message'
-                    })
-                case "error-data":
-                    return Promise.reject({
-                        response: {
-                            data: 'error-data'
-                        }
-                    })
-                default: 
-                    return Promise.reject()
-            }
-        }  
-
-    }
-});
-
 describe('Service `service`', () => {
 
     interface TransformedData<T> {
