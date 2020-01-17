@@ -7,6 +7,24 @@ import {
 } from '../../services/instance'
 
 describe('Service `instance`', () => {
+    test('method `setInstanceBaseURL`', () => {
+        const baseURL = 'fakeURL'
+
+        setInstanceBaseURL(baseURL)
+        expect(axiosInstance.defaults.baseURL).toBe(baseURL)
+    })
+
+    test('methods `setInstanceToken` and `resetInstanceToken`', () => {
+        setInstanceToken({
+            access_token: 'access_token',
+            token_type: 'token_type'
+        })
+
+        expect(axiosInstance.defaults.headers.Authorization).toBe('Bearer access_token')
+        resetInstanceToken()
+        expect(axiosInstance.defaults.headers.Authorization).toBeUndefined()
+    })
+
     describe('method `buildQueryParams`', () => {
         [
             [{a: 1}, 'a=1'],
