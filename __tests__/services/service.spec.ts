@@ -51,13 +51,10 @@ describe('Service `service`', () => {
                 response, transformer
             )
 
-            await expect(transformed).toEqual({
-                status: "Failure",
-                error: {
-                    isTransformed: true, 
-                    transformed: "error"
-                }
-            })
+            await expect(transformed).toEqual(failure({
+                isTransformed: true, 
+                transformed: "error"
+            }))
         })
 
         test('process success response', async () => {
@@ -82,14 +79,11 @@ describe('Service `service`', () => {
             const data = success('data')
             const response = Promise.resolve(data)
             const transformed = await applyDataTransformer(response, transformer)
-            
-            await expect(transformed).toEqual({
-                status: "Success",
-                data: {
-                    isTransformed: true, 
-                    transformed: "data"
-                }
-            })
+
+            await expect(transformed).toEqual(success({
+                isTransformed: true, 
+                transformed: "data"
+            }))
         })
     })
 
@@ -102,10 +96,7 @@ describe('Service `service`', () => {
 
             const result = await resolveServiceMap(responses)
 
-            await expect(result).toEqual({
-                "error": ["error", "error"], 
-                "status": "Failure"
-            })
+            await expect(result).toEqual(failure(["error", "error"]))
         })
 
         test('process when all responses are mixed', async () => {
@@ -116,10 +107,7 @@ describe('Service `service`', () => {
 
             const result = await resolveServiceMap(responses)
 
-            await expect(result).toEqual({
-                "error": ["error"], 
-                "status": "Failure"
-            })
+            await expect(result).toEqual(failure(["error"]))
         })
 
         test('process when all responses are success', async () => {
@@ -130,13 +118,10 @@ describe('Service `service`', () => {
 
             const result = await resolveServiceMap(responses)
 
-            await expect(result).toEqual({
-                data: {
-                    foo: "data-foo", 
-                    bar: "data-bar"
-                }, 
-                status: "Success"
-            })
+            await expect(result).toEqual(success({
+                foo: "data-foo", 
+                bar: "data-bar"
+            }))
         })
     })
 })
