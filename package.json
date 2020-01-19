@@ -1,9 +1,9 @@
 {
     "name": "aidbox-react",
     "scripts": {
+        "coverage": "jest --config=./jest.config.json --coverage --coverageReporters=text-lcov | coveralls",
         "test": "jest --config=./jest.config.json",
-        "test:watch": "jest --config=./jest.config.json --watch",
-        "test:coverage": "jest --config=./jest.config.json --coverage"
+        "test:watch": "jest --config=./jest.config.json --watch"
     },
     "devDependencies": {
         "@babel/core": "^7.7.7",
@@ -14,6 +14,7 @@
         "@types/jest": "^24.0.25",
         "@types/lodash": "^4.14.149",
         "axios": "^0.19.1",
+        "coveralls": "^3.0.9",
         "jest": "^24.9.0",
         "lodash": "^4.17.15",
         "react": "^16.12.0",
