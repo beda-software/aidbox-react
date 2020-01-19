@@ -1,4 +1,4 @@
-export enum Status {
+enum Status {
     Success = 'Success',
     Failure = 'Failure',
     Loading = 'Loading',
@@ -13,7 +13,7 @@ export const notAsked: RemoteDataNotAsked = {
     status: Status.NotAsked,
 };
 
-export interface RemoteDataLoading {
+interface RemoteDataLoading {
     status: Status.Loading;
 }
 
@@ -21,7 +21,7 @@ export const loading: RemoteDataLoading = {
     status: Status.Loading,
 };
 
-export interface RemoteDataSuccess<s> {
+interface RemoteDataSuccess<s> {
     status: Status.Success;
     data: s;
 }
@@ -33,7 +33,7 @@ export function success<S = any>(data: S): RemoteDataSuccess<S> {
     };
 }
 
-export interface RemoteDataFailure<F> {
+interface RemoteDataFailure<F> {
     status: Status.Failure;
     error: F;
 }
