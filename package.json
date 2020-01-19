@@ -16,6 +16,8 @@
         "axios": "^0.19.1",
         "jest": "^24.9.0",
         "lodash": "^4.17.15",
+        "react": "^16.12.0",
+        "react-test-renderer": "^16.12.0",
         "ts-jest": "^24.3.0",
         "tslib": "^1.10.0",
         "typescript": "^3.7.4"
