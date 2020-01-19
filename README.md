@@ -1,5 +1,7 @@
 # aidbox-react
 
+[![Build Status](https://travis-ci.org/beda-software/aidbox-react.svg?branch=master)](https://travis-ci.org/beda-software/aidbox-react) [![Coverage Status](https://coveralls.io/repos/github/beda-software/aidbox-react/badge.svg?branch=master)](https://coveralls.io/github/beda-software/aidbox-react?branch=master)
+
 # Install
 Clone this repository into `src/contrib/aidbox-react`
 and provide type definitions for aidbox in `src/contrib/aidbox`
