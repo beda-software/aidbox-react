@@ -39,7 +39,7 @@ export async function applyErrorTransformer<S = any, F = any, R = any>(
     return response;
 }
 
-type PromiseRemoteDataResultMap<T, F> = { [P in keyof T]: Promise<RemoteDataResult<T[P], F>> };
+export type PromiseRemoteDataResultMap<T, F> = { [P in keyof T]: Promise<RemoteDataResult<T[P], F>> };
 export async function resolveServiceMap<I, F>(
     promisesMap: PromiseRemoteDataResultMap<I, F>
 ): Promise<RemoteDataResult<I, F[]>> {
