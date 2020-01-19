@@ -1,8 +1,4 @@
-import {
-    Status,
-    RemoteDataSuccess,
-    RemoteDataFailure
-} from '../../libs/remoteData';
+import { success, failure } from '../../libs/remoteData';
 
 import { 
     service,
@@ -19,16 +15,6 @@ describe('Service `service`', () => {
         isTransformed: true;
     }
 
-    const responseDataFailed = <RemoteDataFailure<string>> {
-        error: 'error',
-        status: Status.Failure
-    }
-
-    const responseDataSuccess = <RemoteDataSuccess<string>> {
-        data: 'data',
-        status: Status.Success
-    }
-
     const transformer = <T = any>(response: T): TransformedData<T> => {
         return {
             transformed: response,
@@ -38,72 +24,80 @@ describe('Service `service`', () => {
 
     describe('Method `service`', () => {
         test('returns success response', async () => {
-            const result = <any>await service({ url: 'success' }) 
+            const result = await service({ url: 'success' }) 
 
-            expect(result.status).toBe('Success')
-            expect(result.data).toBe('data-success')
+            expect(result).toEqual(success('data-success'))
         })
 
         test('returns failed response', async () => {
-            const result = <any>await service({ url: 'error-data' }) 
+            const result = await service({ url: 'error-data' }) 
 
-            expect(result.status).toBe('Failure')
-            expect(result.error).toBe('error-data')            
+            expect(result).toEqual(failure('error-data'))
         })
 
         test('returns failed response', async () => {
-            const result = <any>await service({ url: 'error-message' }) 
+            const result = await service({ url: 'error-message' }) 
 
-            expect(result.status).toBe('Failure')
-            expect(result.error).toBe('error-message')  
+            expect(result).toEqual(failure('error-message'))  
         })
     })
 
+
     describe('Method `applyErrorTransformer`', () => {
         test('process failed response', async () => {
-            const response = Promise.resolve(responseDataFailed)
-            const transformed = <RemoteDataFailure<TransformedData<string>>> await applyErrorTransformer(
-                <Promise<RemoteDataFailure<string>>>response, transformer
+            const data = failure('error')
+            const response = Promise.resolve(data)
+            const transformed = await applyErrorTransformer(
+                response, transformer
             )
 
-            await expect(transformed.error.isTransformed).toBeTruthy()
+            await expect(transformed).toEqual({
+                status: "Failure",
+                error: {
+                    isTransformed: true, 
+                    transformed: "error"
+                }
+            })
         })
 
         test('process success response', async () => {
-            const response = Promise.resolve(responseDataSuccess)
-            const transformed = <RemoteDataSuccess<string>> await applyErrorTransformer(
-                <Promise<RemoteDataSuccess<string>>>response, transformer
-            )
+            const data = success('data')
+            const response = Promise.resolve(data)
+            const transformed = await applyErrorTransformer(response, transformer)
 
-            await expect(transformed).toEqual(responseDataSuccess)
+            await expect(transformed).toEqual(data)
         })
     })
 
     describe('Method `applyDataTransformer`', () => {
         test('process failed response', async () => {
-            const response = Promise.resolve(responseDataFailed)
-            const transformed = <RemoteDataFailure<string>> await applyDataTransformer(
-                <Promise<RemoteDataFailure<string>>>response, transformer
-            )
+            const data = failure('error')
+            const response = Promise.resolve(data)
+            const transformed = await applyDataTransformer(response, transformer)
 
-            await expect(transformed).toEqual(responseDataFailed)
+            await expect(transformed).toEqual(data)
         })
 
         test('process success response', async () => {
-            const response = Promise.resolve(responseDataSuccess)
-            const transformed = <RemoteDataSuccess<any>> await applyDataTransformer(
-                <Promise<RemoteDataSuccess<string>>>response, transformer
-            )
+            const data = success('data')
+            const response = Promise.resolve(data)
+            const transformed = await applyDataTransformer(response, transformer)
             
-            await expect(transformed.data.isTransformed).toBeTruthy()
+            await expect(transformed).toEqual({
+                status: "Success",
+                data: {
+                    isTransformed: true, 
+                    transformed: "data"
+                }
+            })
         })
     })
 
     describe('Method `resolveServiceMap`', () => {
         test('process when all responses are failed', async () => {
             const responses = <PromiseRemoteDataResultMap<any, string>> {
-                a: Promise.resolve(responseDataFailed),
-                b: Promise.resolve(responseDataFailed)
+                a: Promise.resolve(failure('error')),
+                b: Promise.resolve(failure('error'))
             }
 
             const result = await resolveServiceMap(responses)
@@ -116,8 +110,8 @@ describe('Service `service`', () => {
 
         test('process when all responses are mixed', async () => {
             const responses = <PromiseRemoteDataResultMap<any, string>> {
-                a: Promise.resolve(responseDataSuccess),
-                b: Promise.resolve(responseDataFailed)
+                a: Promise.resolve(success('data')),
+                b: Promise.resolve(failure('error'))
             }
 
             const result = await resolveServiceMap(responses)
@@ -130,20 +124,19 @@ describe('Service `service`', () => {
 
         test('process when all responses are success', async () => {
             const responses = <PromiseRemoteDataResultMap<any, string>> {
-                a: Promise.resolve(responseDataSuccess),
-                b: Promise.resolve(responseDataSuccess)
+                foo: Promise.resolve(success('data-foo')),
+                bar: Promise.resolve(success('data-bar'))
             }
 
             const result = await resolveServiceMap(responses)
 
             await expect(result).toEqual({
                 data: {
-                    a: "data", 
-                    b: "data"
+                    foo: "data-foo", 
+                    bar: "data-bar"
                 }, 
                 status: "Success"
             })
         })
     })
-
 })
