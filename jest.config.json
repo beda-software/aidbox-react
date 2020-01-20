@@ -9,5 +9,7 @@
         "js",
         "jsx"
     ],
+    "collectCoverage": true,
+    "collectCoverageFrom": ["./hooks", "./libs", "./services"],
     "verbose": true
 }
