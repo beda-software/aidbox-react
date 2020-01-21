@@ -3,7 +3,8 @@
     "scripts": {
         "coverage": "jest --config=./jest.config.json --coverage --coverageReporters=text-lcov | coveralls",
         "test": "jest --config=./jest.config.json",
-        "test:watch": "jest --config=./jest.config.json --watch"
+        "test:watch": "jest --config=./jest.config.json --watch",
+        "prettier": "prettier --parser typescript {hooks,libs,servies,__tests__}/**/*.ts"
     },
     "devDependencies": {
         "@babel/core": "^7.7.7",
@@ -17,6 +18,7 @@
         "coveralls": "^3.0.9",
         "jest": "^24.9.0",
         "lodash": "^4.17.15",
+        "prettier": "^1.19.1",
         "react": "^16.12.0",
         "react-test-renderer": "^16.12.0",
         "ts-jest": "^24.3.0",
