@@ -4,7 +4,7 @@
         "coverage": "jest --config=./jest.config.json --coverage --coverageReporters=text-lcov | coveralls",
         "test": "jest --config=./jest.config.json",
         "test:watch": "jest --config=./jest.config.json --watch",
-        "lint": "tslint -c tslint.json ./{libs,hooks,services,__tests__}/**/*.ts",
+        "lint": "tslint -c tslint.json \"./{libs,hooks,services,__tests__}/**/*.ts\"",
         "lint:fix": "npm run lint -- --fix"
     },
     "devDependencies": {
