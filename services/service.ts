@@ -18,12 +18,7 @@ export async function applyDataTransformer<S = any, F = any, R = any>(
     transformer: (data: S) => R
 ): Promise<RemoteDataResult<R, F>> {
     const response = await servicePromise;
-
-    if (isSuccess(response)) {
-        return success(transformer(response.data));
-    }
-
-    return response;
+    return mapSuccess(response, transformer);
 }
 
 export async function applyErrorTransformer<S = any, F = any, R = any>(
@@ -31,12 +26,7 @@ export async function applyErrorTransformer<S = any, F = any, R = any>(
     transformer: (error: F) => R
 ): Promise<RemoteDataResult<S, R>> {
     const response = await servicePromise;
-
-    if (isFailure(response)) {
-        return failure(transformer(response.error));
-    }
-
-    return response;
+    return mapFailure(response, transformer);
 }
 
 export function mapSuccess<S = any, F = any, R = any>(
