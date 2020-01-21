@@ -39,6 +39,28 @@ export async function applyErrorTransformer<S = any, F = any, R = any>(
     return response;
 }
 
+export function mapSuccess<S = any, F = any, R = any>(
+    remoteData: RemoteDataResult<S, F>,
+    transformer: (data: S) => R
+): RemoteDataResult<R, F> {
+    if (isSuccess(remoteData)) {
+        return success(transformer(remoteData.data));
+    }
+
+    return remoteData;
+}
+
+export function mapFailure<S = any, F = any, R = any>(
+    remoteData: RemoteDataResult<S, F>,
+    transformer: (error: F) => R
+): RemoteDataResult<S, R> {
+    if (isFailure(remoteData)) {
+        return failure(transformer(remoteData.error));
+    }
+
+    return remoteData;
+}
+
 export type PromiseRemoteDataResultMap<T, F> = { [P in keyof T]: Promise<RemoteDataResult<T[P], F>> };
 export async function resolveServiceMap<I, F>(
     promisesMap: PromiseRemoteDataResultMap<I, F>
