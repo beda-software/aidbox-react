@@ -19,11 +19,18 @@ export interface Bundle<R extends AidboxResource> {
     readonly resourceType: "Bundle";
     id?: string;
     entry?: Array<BundleEntry<R>>;
+    link?: BundleLink[];
 }
 
 export interface BundleParam {
     type: string;
     value: string | number;
+}
+
+export interface BundleLink {
+    id?: string;
+    relation: string;
+    url: uri;
 }
 
 export interface ValueSet {
