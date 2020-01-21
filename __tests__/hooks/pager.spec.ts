@@ -9,7 +9,7 @@ import { getFHIRResources } from '../../services/fhir';
 jest.mock('../../services/fhir', () => ({ getFHIRResources: jest.fn() }))
 jest.mock('../../hooks/service', () => ({ useService: jest.fn() }))
 
-describe.only('Hook `usePager`', () => {
+describe('Hook `usePager`', () => {
     const resourceType = 'User';
     const resourcesOnPage = 2;
 
