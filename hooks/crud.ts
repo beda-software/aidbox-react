@@ -61,13 +61,13 @@ export function useCRUD<T extends AidboxResource>(
                     );
                     if (isSuccess(bundleResponse)) {
                         const extracted = extractBundleResources(bundleResponse.data);
-                        if(extracted) {
+                        if (extracted) {
                             const resource = success(extracted[resourceType]![0]! as T);
                             setRemoteData(resource);
 
                             return resource;
                         } else {
-                            return failure({"message": "empty response from server"})
+                            return failure({ message: 'empty response from server' });
                         }
                     } else {
                         setRemoteData(bundleResponse);
@@ -75,7 +75,7 @@ export function useCRUD<T extends AidboxResource>(
                         return bundleResponse;
                     }
                 } else {
-                    const response = await saveFHIRResource(updatedResource)
+                    const response = await saveFHIRResource(updatedResource);
                     setRemoteData(response);
 
                     return response;

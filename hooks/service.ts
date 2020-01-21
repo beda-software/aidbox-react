@@ -4,7 +4,7 @@ import { loading, notAsked, RemoteData, RemoteDataResult, success } from '../lib
 
 interface ServiceManager<S> {
     reload: () => void;
-    set: (data: S) => void
+    set: (data: S) => void;
 }
 
 export function useService<S = any, F = any>(
@@ -25,5 +25,8 @@ export function useService<S = any, F = any>(
         // eslint-disable-next-line
     }, deps.concat(reloadsCount));
 
-    return [remoteData, {reload: () => setReloadsCount((count) => count + 1), set: (data: S) => setRemoteData(success(data))}];
+    return [
+        remoteData,
+        { reload: () => setReloadsCount((count) => count + 1), set: (data: S) => setRemoteData(success(data)) },
+    ];
 }
