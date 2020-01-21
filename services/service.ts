@@ -61,10 +61,13 @@ export async function resolveServiceMap<I, F>(
     const responses = (await Promise.all(values)) as Array<RemoteDataResult<any>>;
 
     if (isSuccessAll(responses)) {
-        return success(_.zipObject(keys, _.map(responses, (response) => response.data)) as I);
+        return success(
+            _.zipObject(
+                keys,
+                _.map(responses, (response) => response.data)
+            ) as I
+        );
     } else {
-        return failure(_.compact(
-            _.map(responses, (response) => (isFailure(response) ? response.error : undefined))
-        ));
+        return failure(_.compact(_.map(responses, (response) => (isFailure(response) ? response.error : undefined))));
     }
 }
