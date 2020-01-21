@@ -2,6 +2,8 @@ import { success, failure } from '../../libs/remoteData';
 
 import { 
     service,
+    mapFailure,
+    mapSuccess,
     applyDataTransformer,
     applyErrorTransformer,
     resolveServiceMap,
@@ -84,6 +86,44 @@ describe('Service `service`', () => {
                 isTransformed: true, 
                 transformed: "data"
             }))
+        })
+    })
+
+    describe('Method `mapSuccess`', () => {
+        test('process failed data response', () => {
+            const data = failure('error')
+            const transformed = mapSuccess(data, transformer)
+
+            expect(transformed).toEqual(data)
+        })
+
+        test('process success data response', () => {
+            const data = success('data')
+            const transformed = mapSuccess(data, transformer)
+
+            expect(transformed).toEqual(success({
+                isTransformed: true, 
+                transformed: "data"
+            }))
+        })
+    })
+
+    describe('Method `mapFailure`', () => {
+        test('process failed data response', () => {
+            const data = failure('error')
+            const transformed = mapFailure(data, transformer)
+
+            expect(transformed).toEqual(failure({
+                isTransformed: true, 
+                transformed: "error"
+            }))
+        })
+
+        test('process success data response', () => {
+            const data = success('data')
+            const transformed = mapFailure(data, transformer)
+
+            expect(transformed).toEqual(data)
         })
     })
 
