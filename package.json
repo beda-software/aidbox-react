@@ -19,6 +19,7 @@
         "coveralls": "^3.0.9",
         "husky": "^4.2.0",
         "jest": "^24.9.0",
+        "lint-staged": "^10.0.2",
         "lodash": "^4.17.15",
         "prettier": "^1.19.1",
         "react": "^16.12.0",
@@ -32,8 +33,13 @@
     },
     "husky": {
         "hooks": {
-          "pre-commit": "npm run lint && npm run test",
-          "pre-push": "npm run lint && npm run test"
+            "pre-commit": "lint-staged"
         }
+    },
+    "lint-staged": {
+        "{libs,hooks,services,__tests__}/**/*.{js,jsx,ts,tsx,json,css}": [
+            "npm run lint:fix",
+            "git add"
+        ]
     }
 }
