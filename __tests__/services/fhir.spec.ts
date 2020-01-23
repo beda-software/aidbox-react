@@ -1,5 +1,5 @@
-import { 
-    getFHIRResource, 
+import {
+    getFHIRResource,
     getFHIRResources,
     findFHIRResource,
     saveFHIRResource,
@@ -12,19 +12,17 @@ import {
     isReference,
     getIncludedResource,
     getIncludedResources,
-    getConcepts
+    getConcepts,
 } from '../../services/fhir';
 
 import { service } from '../../services/service';
 import { success, failure } from '../../libs/remoteData';
 
-
 jest.mock('../../services/service', () => {
-    return { service: jest.fn(() => Promise.resolve(success('data'))) }
-})
+    return { service: jest.fn(() => Promise.resolve(success('data'))) };
+});
 
 describe('Service `fhir`', () => {
-
     beforeEach(() => {
         jest.clearAllMocks();
     });
@@ -32,16 +30,16 @@ describe('Service `fhir`', () => {
     test('method `getFHIRResource`', async () => {
         const reference = {
             id: '1',
-            resourceType: 'type'
+            resourceType: 'type',
         };
 
         await getFHIRResource(reference);
 
         expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
-            method: 'GET', 
-            url: '/' + reference.resourceType  + '/' + reference.id
+            method: 'GET',
+            url: '/' + reference.resourceType + '/' + reference.id,
         });
-    })
+    });
 
     test('method `getFHIRResources`', async () => {
         const params = { id: 2 };
@@ -49,255 +47,259 @@ describe('Service `fhir`', () => {
         await getFHIRResources('user', params);
 
         expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
-            method: 'GET', 
-            url: '/user', 
-            params
-        })
+            method: 'GET',
+            url: '/user',
+            params,
+        });
 
         await getFHIRResources('user', params, 'extra');
 
         expect((<jest.Mock>service).mock.calls[1][0]).toEqual({
-            method: 'GET', 
-            url: '/user/extra', 
-            params
-        })
-    })
+            method: 'GET',
+            url: '/user/extra',
+            params,
+        });
+    });
 
     test('method `saveFHIRResource` 1', async () => {
-        const resourceWithId = { id: '1', resourceType: 'type' }
-        const resourceWithoutId = { resourceType: 'type' }
+        const resourceWithId = { id: '1', resourceType: 'type' };
+        const resourceWithoutId = { resourceType: 'type' };
 
-        saveFHIRResource(resourceWithId)
+        saveFHIRResource(resourceWithId);
 
         expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
-            method: 'PUT', 
-            url: '/type/1', 
-            data: resourceWithId
-        })
+            method: 'PUT',
+            url: '/type/1',
+            data: resourceWithId,
+        });
 
-        await saveFHIRResource(resourceWithoutId)
+        await saveFHIRResource(resourceWithoutId);
 
         expect((<jest.Mock>service).mock.calls[1][0]).toEqual({
-            method: 'POST', 
-            url: '/type', 
-            data: resourceWithoutId
-        })
-    })
+            method: 'POST',
+            url: '/type',
+            data: resourceWithoutId,
+        });
+    });
 
     test('method `saveFHIRResources`', async () => {
-        const bundleType = 'transaction'
+        const bundleType = 'transaction';
         const resources = [
             { id: '1', resourceType: 'type' },
             { id: '2', resourceType: 'type' },
-            { resourceType: 'type' }
-        ]
+            { resourceType: 'type' },
+        ];
 
-        await saveFHIRResources(resources, bundleType)
+        await saveFHIRResources(resources, bundleType);
 
         expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
-            method: 'POST', 
-            url: '/', 
+            method: 'POST',
+            url: '/',
             data: {
                 type: bundleType,
                 entry: [
                     {
                         request: {
-                            method: "PUT",
-                            url: "/type/1",
+                            method: 'PUT',
+                            url: '/type/1',
                         },
                         resource: {
-                            id: '1', 
-                            resourceType: 'type'
-                        }
+                            id: '1',
+                            resourceType: 'type',
+                        },
                     },
                     {
                         request: {
-                            method: "PUT",
-                            url: "/type/2",
+                            method: 'PUT',
+                            url: '/type/2',
                         },
                         resource: {
-                            id: '2', 
-                            resourceType: 'type'
-                        }
+                            id: '2',
+                            resourceType: 'type',
+                        },
                     },
                     {
                         request: {
-                            method: "POST",
-                            url: "/type",
+                            method: 'POST',
+                            url: '/type',
                         },
                         resource: {
-                            resourceType: 'type'
-                        }
-                    }
-                ]
-            }
-        })
-    })
-    
+                            resourceType: 'type',
+                        },
+                    },
+                ],
+            },
+        });
+    });
+
     test('method `findFHIRResource`', async () => {
-        const params = { id: 1 }
-        const resourceType = 'type'
+        const params = { id: 1 };
+        const resourceType = 'type';
 
-        await findFHIRResource(resourceType, params)
+        await findFHIRResource(resourceType, params);
 
-        const config = (<jest.Mock>service).mock.calls[0][0]
+        const config = (<jest.Mock>service).mock.calls[0][0];
 
-        expect(config).toEqual(expect.objectContaining({
-            method: 'GET',
-            url: '/' + resourceType,
-            params
-        }))
-
-        expect(() => {
-            const response = ''
-            config.transformResponse(response)
-         }).toThrow();
+        expect(config).toEqual(
+            expect.objectContaining({
+                method: 'GET',
+                url: '/' + resourceType,
+                params,
+            })
+        );
 
         expect(() => {
-            const response = '{"entry":[]}'
-            config.transformResponse(response)
-         }).toThrow();
-
-        const response = '{"entry":[{"resource": "data"}]}'
-        const transformed = config.transformResponse(response)
-
-        expect(transformed).toBe('data')
+            const response = '';
+            config.transformResponse(response);
+        }).toThrow();
 
         expect(() => {
-            const response = '{"entry":[{"resource": "a"}, {"resource": "b"}]}'
-            config.transformResponse(response)
-         }).toThrow();
-    })
+            const response = '{"entry":[]}';
+            config.transformResponse(response);
+        }).toThrow();
+
+        const response = '{"entry":[{"resource": "data"}]}';
+        const transformed = config.transformResponse(response);
+
+        expect(transformed).toBe('data');
+
+        expect(() => {
+            const response = '{"entry":[{"resource": "a"}, {"resource": "b"}]}';
+            config.transformResponse(response);
+        }).toThrow();
+    });
 
     test('method `patchFHIRResource`', async () => {
-        const resource = { 
+        const resource = {
             id: '1',
-            resourceType: 'type'
-        }
+            resourceType: 'type',
+        };
 
-        await patchFHIRResource(resource)
+        await patchFHIRResource(resource);
 
         expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
             method: 'PATCH',
             data: resource,
             url: `/${resource.resourceType}/${resource.id}`,
-        })
-    })
+        });
+    });
 
     test('method `deleteFHIRResource`', async () => {
-        const result = await deleteFHIRResource({ 
+        const result = await deleteFHIRResource({
             id: '1',
-            resourceType: 'Unknown'
-        })
+            resourceType: 'Unknown',
+        });
 
-        expect(result).toEqual(failure({}))
+        expect(result).toEqual(failure({}));
 
-        const resource = { 
+        const resource = {
             id: '1',
-            resourceType: 'Location'
-        }
+            resourceType: 'Location',
+        };
 
-        await deleteFHIRResource(resource)
+        await deleteFHIRResource(resource);
 
         expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
             method: 'PATCH',
             url: `/${resource.resourceType}/${resource.id}`,
             data: {
-                'status': 'inactive',
-            }
-        })
-    })
+                status: 'inactive',
+            },
+        });
+    });
 
     test('method `forceDeleteFHIRResource`', async () => {
-        const resource = { 
+        const resource = {
             id: '1',
-            resourceType: 'type'
-        }
+            resourceType: 'type',
+        };
         const params = { id: 2 };
 
-        await forceDeleteFHIRResource(resource, params)
+        await forceDeleteFHIRResource(resource, params);
 
         expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
-            method: 'DELETE', 
+            method: 'DELETE',
             url: `/${resource.resourceType}/${resource.id}`,
-            params
-        })
-    })
+            params,
+        });
+    });
 
     test('method `getReference`', () => {
-        const id = '1'
-        const resourceType = 'type'
-        const resource = { id, resourceType }
+        const id = '1';
+        const resourceType = 'type';
+        const resource = { id, resourceType };
 
-        expect(getReference(resource)).toEqual({ 
+        expect(getReference(resource)).toEqual({
             id,
-            resourceType 
-        })
+            resourceType,
+        });
 
-        expect(getReference(resource, 'value')).toEqual({ 
-            id, 
-            resourceType, 
-            display: 'value'
-        })
-    })
+        expect(getReference(resource, 'value')).toEqual({
+            id,
+            resourceType,
+            display: 'value',
+        });
+    });
 
     test('method `makeReference`', () => {
         const id = '1';
         const resourceType = 'type';
 
-        expect(makeReference(resourceType, id)).toEqual({ id, resourceType })
-    })
+        expect(makeReference(resourceType, id)).toEqual({ id, resourceType });
+    });
 
     test('method `isReference`', () => {
-        expect(isReference({
-            id: '1',
-            resourceType: 'type',
-        })).toBeTruthy()
+        expect(
+            isReference({
+                id: '1',
+                resourceType: 'type',
+            })
+        ).toBeTruthy();
 
-        expect(isReference({
-            id: '1',
-            resourceType: 'type',
-            extraField: true
-        })).toBeFalsy()  
-    })
+        expect(
+            isReference({
+                id: '1',
+                resourceType: 'type',
+                extraField: true,
+            })
+        ).toBeFalsy();
+    });
 
     test('method `getIncludedResource` 1', () => {
         const resources = {
-            customType: [
-                { id: '1' }
-            ],
-        }
+            customType: [{ id: '1' }],
+        };
 
-        const referenceFirst = { id: '1', resourceType: 'customType' }
-        const referenceSecond = { id: '2', resourceType: 'customType' }
+        const referenceFirst = { id: '1', resourceType: 'customType' };
+        const referenceSecond = { id: '2', resourceType: 'customType' };
 
-        expect(getIncludedResource(resources, referenceFirst)).toBeTruthy()
-        expect(getIncludedResource(resources, referenceSecond)).toBeFalsy()
-    })
+        expect(getIncludedResource(resources, referenceFirst)).toBeTruthy();
+        expect(getIncludedResource(resources, referenceSecond)).toBeFalsy();
+    });
 
     test('method `getIncludedResources`', () => {
-        const customTypeResources = [1, 2, 3]
-        const resourceType = 'customType'
+        const customTypeResources = [1, 2, 3];
+        const resourceType = 'customType';
         const resources = {
-            customType: customTypeResources
-        }
+            customType: customTypeResources,
+        };
 
-        expect(getIncludedResources(resources, resourceType)).toEqual(customTypeResources)
-    })
+        expect(getIncludedResources(resources, resourceType)).toEqual(customTypeResources);
+    });
 
     test('method `getConcepts`', async () => {
         const valueSetId = '1';
         const params = {
             a: 1,
-            b: 2
+            b: 2,
         };
 
-        await getConcepts(valueSetId, params)
+        await getConcepts(valueSetId, params);
 
         expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
-            method: 'GET', 
+            method: 'GET',
             url: `/ValueSet/${valueSetId}/$expand`,
-            params
-        })
-    })
-})
+            params,
+        });
+    });
+});

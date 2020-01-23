@@ -5,9 +5,8 @@ import { useService } from '../../hooks/service';
 import { success } from '../../libs/remoteData';
 import { getFHIRResources } from '../../services/fhir';
 
-
-jest.mock('../../services/fhir', () => ({ getFHIRResources: jest.fn() }))
-jest.mock('../../hooks/service', () => ({ useService: jest.fn() }))
+jest.mock('../../services/fhir', () => ({ getFHIRResources: jest.fn() }));
+jest.mock('../../hooks/service', () => ({ useService: jest.fn() }));
 
 describe('Hook `usePager`', () => {
     const resourceType = 'User';
@@ -18,124 +17,123 @@ describe('Hook `usePager`', () => {
     });
 
     describe('property `hasNext`', () => {
-        
-        test('returns false when there\'s no next page', () => {
+        test("returns false when there's no next page", () => {
             const data = success({
                 id: 'fakeID',
-                resourceType: "type"
+                resourceType: 'type',
             });
-            
-            (<jest.Mock>useService).mockImplementation(() => [data])
-            
-            const { result } = renderHook(() => usePager<User>(resourceType, resourcesOnPage))
-            const [remoteData, { hasNext }] = result.current
 
-            expect(hasNext).toBeFalsy()
-            expect(remoteData).toEqual(data)
-        })
+            (<jest.Mock>useService).mockImplementation(() => [data]);
 
-        test('returns true when there\'s next page', () => {
+            const { result } = renderHook(() => usePager<User>(resourceType, resourcesOnPage));
+            const [remoteData, { hasNext }] = result.current;
+
+            expect(hasNext).toBeFalsy();
+            expect(remoteData).toEqual(data);
+        });
+
+        test("returns true when there's next page", () => {
             const data = success({
                 id: 'fakeID',
-                resourceType: "type",
+                resourceType: 'type',
                 link: [
                     {
                         resourceType: 'Bundle',
                         relation: 'next',
-                        uri: 'uri'
-                    }
-                ]
+                        uri: 'uri',
+                    },
+                ],
             });
-            
-            (<jest.Mock>useService).mockImplementation(() => [data])
-            
-            const { result } = renderHook(() => usePager<User>(resourceType, resourcesOnPage))
-            const [remoteData, { hasNext }] = result.current
 
-            expect(hasNext).toBeTruthy()
-            expect(remoteData).toEqual(data)
-        })
-    })
+            (<jest.Mock>useService).mockImplementation(() => [data]);
 
-    test('method `loadNext`', async () =>  {
+            const { result } = renderHook(() => usePager<User>(resourceType, resourcesOnPage));
+            const [remoteData, { hasNext }] = result.current;
+
+            expect(hasNext).toBeTruthy();
+            expect(remoteData).toEqual(data);
+        });
+    });
+
+    test('method `loadNext`', async () => {
         const data = success({
             id: 'fakeID',
-            resourceType: "type"
+            resourceType: 'type',
         });
 
-        (<jest.Mock>useService).mockImplementation(() => [data])
+        (<jest.Mock>useService).mockImplementation(() => [data]);
 
-        const { result } = renderHook(() => usePager<User>(resourceType, resourcesOnPage))
-        const { loadNext } = result.current[1]
+        const { result } = renderHook(() => usePager<User>(resourceType, resourcesOnPage));
+        const { loadNext } = result.current[1];
 
         {
-            let [asyncFunction, [pageToLoad]] = (<jest.Mock>useService).mock.calls[0]
+            let [asyncFunction, [pageToLoad]] = (<jest.Mock>useService).mock.calls[0];
 
-            asyncFunction()
-            
-            let [fhirResourceType, fhirSearchParams] = (<jest.Mock>getFHIRResources).mock.calls[0]
+            asyncFunction();
 
-            expect(pageToLoad).toBe(1)
-            expect(fhirSearchParams).toEqual({ _count: 2, _page: 1 })
-            expect(fhirResourceType).toEqual(resourceType)
+            let [fhirResourceType, fhirSearchParams] = (<jest.Mock>getFHIRResources).mock.calls[0];
+
+            expect(pageToLoad).toBe(1);
+            expect(fhirSearchParams).toEqual({ _count: 2, _page: 1 });
+            expect(fhirResourceType).toEqual(resourceType);
         }
 
         act(() => {
-            loadNext()
-        })
-
-        {
-            let [asyncFunction, [pageToLoad]] = (<jest.Mock>useService).mock.calls[1]
-
-            asyncFunction()
-            
-            let [fhirResourceType, fhirSearchParams] = (<jest.Mock>getFHIRResources).mock.calls[1]
-
-            expect(pageToLoad).toBe(2)
-            expect(fhirSearchParams).toEqual({ _count: 2, _page: 2 })
-            expect(fhirResourceType).toEqual(resourceType)
-        }
-    })
-    
-    test('method `reload`', async () =>  {
-        const data = success({
-            id: 'fakeID',
-            resourceType: "type"
+            loadNext();
         });
 
-        (<jest.Mock>useService).mockImplementation(() => [data])
+        {
+            let [asyncFunction, [pageToLoad]] = (<jest.Mock>useService).mock.calls[1];
 
-        const { result } = renderHook(() => usePager<User>(resourceType, resourcesOnPage))
-        const { reload } = result.current[1]
+            asyncFunction();
+
+            let [fhirResourceType, fhirSearchParams] = (<jest.Mock>getFHIRResources).mock.calls[1];
+
+            expect(pageToLoad).toBe(2);
+            expect(fhirSearchParams).toEqual({ _count: 2, _page: 2 });
+            expect(fhirResourceType).toEqual(resourceType);
+        }
+    });
+
+    test('method `reload`', async () => {
+        const data = success({
+            id: 'fakeID',
+            resourceType: 'type',
+        });
+
+        (<jest.Mock>useService).mockImplementation(() => [data]);
+
+        const { result } = renderHook(() => usePager<User>(resourceType, resourcesOnPage));
+        const { reload } = result.current[1];
 
         {
-            let [asyncFunction, [pageToLoad, reloadsCount]] = (<jest.Mock>useService).mock.calls[0]
+            let [asyncFunction, [pageToLoad, reloadsCount]] = (<jest.Mock>useService).mock.calls[0];
 
-            asyncFunction()
-            
-            let [fhirResourceType, fhirSearchParams] = (<jest.Mock>getFHIRResources).mock.calls[0]
+            asyncFunction();
 
-            expect(pageToLoad).toBe(1)
-            expect(reloadsCount).toBe(0)
-            expect(fhirSearchParams).toEqual({ _count: 2, _page: 1 })
-            expect(fhirResourceType).toEqual(resourceType)
+            let [fhirResourceType, fhirSearchParams] = (<jest.Mock>getFHIRResources).mock.calls[0];
+
+            expect(pageToLoad).toBe(1);
+            expect(reloadsCount).toBe(0);
+            expect(fhirSearchParams).toEqual({ _count: 2, _page: 1 });
+            expect(fhirResourceType).toEqual(resourceType);
         }
 
         act(() => {
-            reload()
-        })
+            reload();
+        });
 
         {
-            let [asyncFunction, [pageToLoad, reloadsCount]] = (<jest.Mock>useService).mock.calls[1]
+            let [asyncFunction, [pageToLoad, reloadsCount]] = (<jest.Mock>useService).mock.calls[1];
 
-            asyncFunction()
-            
-            let [fhirResourceType, fhirSearchParams] = (<jest.Mock>getFHIRResources).mock.calls[1]
+            asyncFunction();
 
-            expect(pageToLoad).toBe(1)
-            expect(reloadsCount).toBe(1)
-            expect(fhirSearchParams).toEqual({ _count: 2, _page: 1 })
-            expect(fhirResourceType).toEqual(resourceType)
+            let [fhirResourceType, fhirSearchParams] = (<jest.Mock>getFHIRResources).mock.calls[1];
+
+            expect(pageToLoad).toBe(1);
+            expect(reloadsCount).toBe(1);
+            expect(fhirSearchParams).toEqual({ _count: 2, _page: 1 });
+            expect(fhirResourceType).toEqual(resourceType);
         }
-    })
-})
+    });
+});
