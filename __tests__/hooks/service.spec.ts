@@ -2,61 +2,60 @@ import { act, renderHook } from '@testing-library/react-hooks';
 import { useService } from '../../hooks/service';
 import { success } from '../../libs/remoteData';
 
-
 describe('Hook `useService`', () => {
-    const data = { custom: 'data'}
-    const service = () => Promise.resolve(success(data))
+    const data = { custom: 'data' };
+    const service = () => Promise.resolve(success(data));
 
     const remoteDataSuccess = {
         status: 'Success',
-        data
-    }
+        data,
+    };
 
     const remoteDataLoading = {
-        status: 'Loading'
-    }
+        status: 'Loading',
+    };
 
     test('change `Loading` to `Success` status when service resolved', async () => {
-        const { result, waitForNextUpdate } = renderHook(() => useService(service))
+        const { result, waitForNextUpdate } = renderHook(() => useService(service));
 
-        expect(result.current[0]).toEqual(remoteDataLoading)
+        expect(result.current[0]).toEqual(remoteDataLoading);
 
-        await waitForNextUpdate()
+        await waitForNextUpdate();
 
-        expect(result.current[0]).toEqual(remoteDataSuccess)
-    })
+        expect(result.current[0]).toEqual(remoteDataSuccess);
+    });
 
     test('method `reload` returns the same data ', async () => {
-        const { result, waitForNextUpdate } = renderHook(() => useService(service))
+        const { result, waitForNextUpdate } = renderHook(() => useService(service));
 
-        await waitForNextUpdate()
+        await waitForNextUpdate();
 
-        expect(result.current[0]).toEqual(remoteDataSuccess)
+        expect(result.current[0]).toEqual(remoteDataSuccess);
 
         act(() => {
-            result.current[1].reload()
-        })
+            result.current[1].reload();
+        });
 
-        expect(result.current[0]).toEqual(remoteDataLoading)
+        expect(result.current[0]).toEqual(remoteDataLoading);
 
-        await waitForNextUpdate()
+        await waitForNextUpdate();
 
-        expect(result.current[0]).toEqual(remoteDataSuccess)
-    })
+        expect(result.current[0]).toEqual(remoteDataSuccess);
+    });
 
     test('has `set` data method returns success remote data', async () => {
-        const { result, waitForNextUpdate } = renderHook(() => useService(service))
-        const data = { custom: 'data-new' }
+        const { result, waitForNextUpdate } = renderHook(() => useService(service));
+        const data = { custom: 'data-new' };
 
-        await waitForNextUpdate()
-        
+        await waitForNextUpdate();
+
         act(() => {
-            result.current[1].set(data)
-        })
+            result.current[1].set(data);
+        });
 
         expect(result.current[0]).toEqual({
             status: 'Success',
-            data
-        })
-    })
-})
+            data,
+        });
+    });
+});

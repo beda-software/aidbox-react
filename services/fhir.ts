@@ -185,7 +185,7 @@ export async function deleteFHIRResource<R extends AidboxResource>(
 
 export async function forceDeleteFHIRResource<R extends AidboxResource>(
     resource: AidboxReference<R>,
-    params?: SearchParams,
+    params?: SearchParams
 ): Promise<RemoteDataResult<R>> {
     return service({
         method: 'DELETE',
