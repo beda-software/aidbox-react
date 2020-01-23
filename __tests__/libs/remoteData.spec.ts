@@ -10,7 +10,7 @@ import {
     isFailure,
 } from '../../libs/remoteData';
 
-describe.only('Lib `remoteData`', () => {
+describe('Lib `remoteData`', () => {
     test('method `success`', () => {
         expect(success('value')).toEqual({
             status: 'Success',
