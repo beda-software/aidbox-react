@@ -18,12 +18,7 @@ export async function applyDataTransformer<S = any, F = any, R = any>(
     transformer: (data: S) => R
 ): Promise<RemoteDataResult<R, F>> {
     const response = await servicePromise;
-
-    if (isSuccess(response)) {
-        return success(transformer(response.data));
-    }
-
-    return response;
+    return mapSuccess(response, transformer);
 }
 
 export async function applyErrorTransformer<S = any, F = any, R = any>(
@@ -31,12 +26,29 @@ export async function applyErrorTransformer<S = any, F = any, R = any>(
     transformer: (error: F) => R
 ): Promise<RemoteDataResult<S, R>> {
     const response = await servicePromise;
+    return mapFailure(response, transformer);
+}
 
-    if (isFailure(response)) {
-        return failure(transformer(response.error));
+export function mapSuccess<S = any, F = any, R = any>(
+    remoteData: RemoteDataResult<S, F>,
+    transformer: (data: S) => R
+): RemoteDataResult<R, F> {
+    if (isSuccess(remoteData)) {
+        return success(transformer(remoteData.data));
     }
 
-    return response;
+    return remoteData;
+}
+
+export function mapFailure<S = any, F = any, R = any>(
+    remoteData: RemoteDataResult<S, F>,
+    transformer: (error: F) => R
+): RemoteDataResult<S, R> {
+    if (isFailure(remoteData)) {
+        return failure(transformer(remoteData.error));
+    }
+
+    return remoteData;
 }
 
 export type PromiseRemoteDataResultMap<T, F> = { [P in keyof T]: Promise<RemoteDataResult<T[P], F>> };
@@ -49,10 +61,13 @@ export async function resolveServiceMap<I, F>(
     const responses = (await Promise.all(values)) as Array<RemoteDataResult<any>>;
 
     if (isSuccessAll(responses)) {
-        return success(_.zipObject(keys, _.map(responses, (response) => response.data)) as I);
+        return success(
+            _.zipObject(
+                keys,
+                _.map(responses, (response) => response.data)
+            ) as I
+        );
     } else {
-        return failure(_.compact(
-            _.map(responses, (response) => (isFailure(response) ? response.error : undefined))
-        ));
+        return failure(_.compact(_.map(responses, (response) => (isFailure(response) ? response.error : undefined))));
     }
 }
