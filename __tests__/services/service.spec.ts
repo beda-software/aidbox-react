@@ -173,15 +173,15 @@ describe('Service `service`', () => {
     });
 
     describe('Method `resolveDataResults`', () => {
-        test('process when all responses are failed', async () => {
+        test('process when data are failed', async () => {
             expect(resolveDataResults([failure('error'), failure('error')])).toEqual(failure(['error', 'error']));
         });
 
-        test('process when all responses are mixed', () => {
+        test('process when data are mixed', () => {
             expect(resolveDataResults([success('data'), failure('error')])).toEqual(failure(['error']));
         });
 
-        test('process when all responses are success', () => {
+        test('process when data are success', () => {
             expect(resolveDataResults([success('data-foo'), success('data-bar')])).toEqual(
                 success(['data-foo', 'data-bar'])
             );
