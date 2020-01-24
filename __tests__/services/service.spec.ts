@@ -7,6 +7,7 @@ import {
     applyDataTransformer,
     applyErrorTransformer,
     resolveServiceMap,
+    resolveDataResults,
     PromiseRemoteDataResultMap,
 } from '../../services/service';
 
@@ -167,6 +168,22 @@ describe('Service `service`', () => {
                     foo: 'data-foo',
                     bar: 'data-bar',
                 })
+            );
+        });
+    });
+
+    describe('Method `resolveDataResults`', () => {
+        test('process when all responses are failed', async () => {
+            expect(resolveDataResults([failure('error'), failure('error')])).toEqual(failure(['error', 'error']));
+        });
+
+        test('process when all responses are mixed', () => {
+            expect(resolveDataResults([success('data'), failure('error')])).toEqual(failure(['error']));
+        });
+
+        test('process when all responses are success', () => {
+            expect(resolveDataResults([success('data-foo'), success('data-bar')])).toEqual(
+                success(['data-foo', 'data-bar'])
             );
         });
     });

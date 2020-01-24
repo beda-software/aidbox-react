@@ -52,22 +52,33 @@ export function mapFailure<S = any, F = any, R = any>(
 }
 
 export type PromiseRemoteDataResultMap<T, F> = { [P in keyof T]: Promise<RemoteDataResult<T[P], F>> };
+
+export function resolveDataResults<T, F>(remoteDataResults: Array<RemoteDataResult<T, F>>): RemoteDataResult<T[], F[]> {
+    if (isSuccessAll(remoteDataResults)) {
+        return success(_.map(remoteDataResults, (remoteDataResult) => remoteDataResult.data));
+    }
+
+    return failure(
+        _.compact(
+            _.map(remoteDataResults, (remoteDataResult) =>
+                isFailure(remoteDataResult) ? remoteDataResult.error : undefined
+            )
+        )
+    );
+}
+
 export async function resolveServiceMap<I, F>(
     promisesMap: PromiseRemoteDataResultMap<I, F>
 ): Promise<RemoteDataResult<I, F[]>> {
-    const keys = _.keys(promisesMap);
-    const values = _.values(promisesMap);
+    const keys = Object.keys(promisesMap);
+    const responses = (await Promise.all(Object.values(promisesMap))) as Array<RemoteDataResult<any>>;
 
-    const responses = (await Promise.all(values)) as Array<RemoteDataResult<any>>;
+    const result = <any>mapSuccess(resolveDataResults(responses), (responseData) =>
+        keys.reduce((transformed, key, index) => {
+            (transformed[key] = responseData[index]), transformed;
+            return transformed;
+        }, {})
+    );
 
-    if (isSuccessAll(responses)) {
-        return success(
-            _.zipObject(
-                keys,
-                _.map(responses, (response) => response.data)
-            ) as I
-        );
-    } else {
-        return failure(_.compact(_.map(responses, (response) => (isFailure(response) ? response.error : undefined))));
-    }
+    return Promise.resolve(result);
 }
