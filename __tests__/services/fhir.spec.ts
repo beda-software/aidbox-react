@@ -134,44 +134,67 @@ describe('Service `fhir`', () => {
         });
     });
 
-    test('method `findFHIRResource`', async () => {
-        const params = { id: 1 };
-        const resourceType = 'Patient';
+    describe('method `findFHIRResource`', () => {
+        test('has correct behavior', async () => {
+            const params = { id: 1 };
+            const resourceType = 'Patient';
 
-        await findFHIRResource(resourceType, params);
+            await findFHIRResource(resourceType, params);
 
-        const config = (<jest.Mock>service).mock.calls[0][0];
+            const config = (<jest.Mock>service).mock.calls[0][0];
 
-        expect(config).toEqual(
-            expect.objectContaining({
-                method: 'GET',
-                url: '/' + resourceType,
-                params: {
-                    'active:not': [false],
-                    id: 1,
-                },
-            })
-        );
+            expect(config).toEqual(
+                expect.objectContaining({
+                    method: 'GET',
+                    url: '/' + resourceType,
+                    params: {
+                        'active:not': [false],
+                        id: 1,
+                    },
+                })
+            );
 
-        expect(() => {
-            const response = '';
-            config.transformResponse(response);
-        }).toThrow();
+            expect(() => {
+                const response = '';
+                config.transformResponse(response);
+            }).toThrow();
 
-        expect(() => {
-            const response = '{"entry":[]}';
-            config.transformResponse(response);
-        }).toThrow();
+            expect(() => {
+                const response = '{"entry":[]}';
+                config.transformResponse(response);
+            }).toThrow();
 
-        const response = '{"entry":[{"resource": "data"}]}';
-        const transformed = config.transformResponse(response);
+            const response = '{"entry":[{"resource": "data"}]}';
+            const transformed = config.transformResponse(response);
 
-        expect(transformed).toBe('data');
+            expect(transformed).toBe('data');
 
-        expect(() => {
-            const response = '{"entry":[{"resource": "a"}, {"resource": "b"}]}';
-            config.transformResponse(response);
-        }).toThrow();
+            expect(() => {
+                const response = '{"entry":[{"resource": "a"}, {"resource": "b"}]}';
+                config.transformResponse(response);
+            }).toThrow();
+        });
+
+        test('receive extra path argument', async () => {
+            const params = { id: 1 };
+            const resourceType = 'Patient';
+            const extraPath = 'extraPath';
+
+            await findFHIRResource(resourceType, params, extraPath);
+
+            const config = (<jest.Mock>service).mock.calls[0][0];
+
+            expect(config).toEqual(
+                expect.objectContaining({
+                    method: 'GET',
+                    url: '/' + resourceType + '/' + extraPath,
+                    params: {
+                        'active:not': [false],
+                        id: 1,
+                    },
+                })
+            );
+        });
     });
 
     test('method `patchFHIRResource`', async () => {
@@ -213,19 +236,36 @@ describe('Service `fhir`', () => {
         });
     });
 
-    test('method `forceDeleteFHIRResource`', async () => {
-        const resource = {
-            id: '1',
-            resourceType: 'Patient',
-        };
-        const params = { id: 2 };
+    describe('method `forceDeleteFHIRResource`', () => {
+        test('has correct behavior without `params` argument', async () => {
+            const resource = {
+                id: '1',
+                resourceType: 'Patient',
+            };
 
-        await forceDeleteFHIRResource(resource, params);
+            await forceDeleteFHIRResource(resource);
 
-        expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
-            method: 'DELETE',
-            url: `/${resource.resourceType}/${resource.id}`,
-            params,
+            expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
+                method: 'DELETE',
+                url: `/${resource.resourceType}/${resource.id}`,
+                params: {},
+            });
+        });
+
+        test('has correct behavior with `params` argument', async () => {
+            const resource = {
+                id: '1',
+                resourceType: 'Patient',
+            };
+            const params = { id: 2 };
+
+            await forceDeleteFHIRResource(resource, params);
+
+            expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
+                method: 'DELETE',
+                url: `/${resource.resourceType}/${resource.id}`,
+                params,
+            });
         });
     });
 
@@ -323,14 +363,26 @@ describe('Service `fhir`', () => {
         expect(getIncludedResource(resources, referenceSecond)).toBeFalsy();
     });
 
-    test('method `getIncludedResources`', () => {
-        const customTypeResources = [1, 2, 3];
-        const resourceType = 'customType';
-        const resources = {
-            customType: customTypeResources,
-        };
+    describe('method `getIncludedResources`', () => {
+        test('returns resources when exists', async () => {
+            const customTypeResources = [1, 2, 3];
+            const resourceType = 'customType';
+            const resources = {
+                customType: customTypeResources,
+            };
 
-        expect(getIncludedResources(resources, resourceType)).toEqual(customTypeResources);
+            expect(getIncludedResources(resources, resourceType)).toEqual(customTypeResources);
+        });
+
+        test("returns empty array when there aren't", async () => {
+            const customTypeResources = [1, 2, 3];
+            const resourceType = 'unknownType';
+            const resources = {
+                customType: customTypeResources,
+            };
+
+            expect(getIncludedResources(resources, resourceType)).toEqual([]);
+        });
     });
 
     test('method `getConcepts`', async () => {
