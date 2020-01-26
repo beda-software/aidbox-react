@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react-hooks';
 import { Patient } from 'src/contrib/aidbox';
 import { useCRUD } from '../../hooks/crud';
-import { success, failure } from '../../libs/remoteData';
+import { success, failure, loading } from '../../libs/remoteData';
 import {
     getFHIRResource,
     saveFHIRResource,
@@ -36,10 +36,7 @@ describe('Hook `usePager`', () => {
                 },
             } = renderHook(() => useCRUD<Patient>(resourceType));
 
-            expect(remoteData).toEqual({
-                status: 'Success',
-                data: { resourceType },
-            });
+            expect(remoteData).toEqual(success({ resourceType }));
         });
 
         test('has correct behavior with parameter `id`', async () => {
@@ -48,16 +45,11 @@ describe('Hook `usePager`', () => {
             const id = 'toggle';
             const { result, waitForNextUpdate } = renderHook(() => useCRUD<Patient>(resourceType, id));
 
-            expect(result.current[0]).toEqual({
-                status: 'Loading',
-            });
+            expect(result.current[0]).toEqual(loading);
 
             await waitForNextUpdate();
 
-            expect(result.current[0]).toEqual({
-                status: 'Success',
-                data: 'data',
-            });
+            expect(result.current[0]).toEqual(success('data'));
         });
 
         describe('has correct behavior with parameter `getOrCreate`', () => {
@@ -73,16 +65,11 @@ describe('Hook `usePager`', () => {
 
                 const { result, waitForNextUpdate } = renderHook(() => useCRUD<Patient>(resourceType, id, getOrCreate));
 
-                expect(result.current[0]).toEqual({
-                    status: 'Loading',
-                });
+                expect(result.current[0]).toEqual(loading);
 
                 await waitForNextUpdate();
 
-                expect(result.current[0]).toEqual({
-                    status: 'Success',
-                    data: 'data',
-                });
+                expect(result.current[0]).toEqual(success('data'));
             });
 
             test('when FHIR response has error', async () => {
@@ -90,16 +77,11 @@ describe('Hook `usePager`', () => {
 
                 const { result, waitForNextUpdate } = renderHook(() => useCRUD<Patient>(resourceType, id, getOrCreate));
 
-                expect(result.current[0]).toEqual({
-                    status: 'Loading',
-                });
+                expect(result.current[0]).toEqual(loading);
 
                 await waitForNextUpdate();
 
-                expect(result.current[0]).toEqual({
-                    status: 'Success',
-                    data: defaultData,
-                });
+                expect(result.current[0]).toEqual(success(defaultData));
             });
         });
 
@@ -118,10 +100,7 @@ describe('Hook `usePager`', () => {
                     useCRUD<Patient>(resourceType, undefined, getOrCreate, defaultResource)
                 );
 
-                expect(result.current[0]).toEqual({
-                    status: 'Success',
-                    data: defaultResource,
-                });
+                expect(result.current[0]).toEqual(success(defaultResource));
             });
 
             test('when FHIR response has error', async () => {
@@ -131,16 +110,11 @@ describe('Hook `usePager`', () => {
                     useCRUD<Patient>(resourceType, id, getOrCreate, defaultResource)
                 );
 
-                expect(result.current[0]).toEqual({
-                    status: 'Loading',
-                });
+                expect(result.current[0]).toEqual(loading);
 
                 await waitForNextUpdate();
 
-                expect(result.current[0]).toEqual({
-                    status: 'Success',
-                    data: { ...defaultResource, id },
-                });
+                expect(result.current[0]).toEqual(success({ ...defaultResource, id }));
             });
         });
     });
@@ -170,10 +144,7 @@ describe('Hook `usePager`', () => {
 
             await waitForNextUpdate();
 
-            expect(result.current[0]).toEqual({
-                status: 'Success',
-                data: 'data',
-            });
+            expect(result.current[0]).toEqual(success('data'));
         });
 
         describe('has correct behavior with additional `relatedResources` parameter', () => {
@@ -188,18 +159,13 @@ describe('Hook `usePager`', () => {
                     const { result, waitForNextUpdate } = renderHook(() => useCRUD<Patient>(resourceType));
                     const { handleSave } = result.current[1];
 
-                    expect(result.current[0]).toEqual({
-                        status: 'Success',
-                        data: resource,
-                    });
+                    expect(result.current[0]).toEqual(success(resource));
 
                     act(() => {
                         handleSave(resource, relatedResources);
                     });
 
-                    expect(result.current[0]).toEqual({
-                        status: 'Loading',
-                    });
+                    expect(result.current[0]).toEqual(loading);
 
                     await waitForNextUpdate();
 
@@ -219,10 +185,7 @@ describe('Hook `usePager`', () => {
                     const { result } = renderHook(() => useCRUD<Patient>(resourceType));
                     const { handleSave } = result.current[1];
 
-                    expect(result.current[0]).toEqual({
-                        status: 'Success',
-                        data: resource,
-                    });
+                    expect(result.current[0]).toEqual(success(resource));
 
                     let response;
 
@@ -245,18 +208,13 @@ describe('Hook `usePager`', () => {
                 const { result, waitForNextUpdate } = renderHook(() => useCRUD<Patient>(resourceType));
                 const { handleSave } = result.current[1];
 
-                expect(result.current[0]).toEqual({
-                    status: 'Success',
-                    data: resource,
-                });
+                expect(result.current[0]).toEqual(success(resource));
 
                 act(() => {
                     handleSave(resource, relatedResources);
                 });
 
-                expect(result.current[0]).toEqual({
-                    status: 'Loading',
-                });
+                expect(result.current[0]).toEqual(loading);
 
                 await waitForNextUpdate();
 
@@ -279,15 +237,10 @@ describe('Hook `usePager`', () => {
             handleDelete(resource);
         });
 
-        expect(result.current[0]).toEqual({
-            status: 'Loading',
-        });
+        expect(result.current[0]).toEqual(loading);
 
         await waitForNextUpdate();
 
-        expect(result.current[0]).toEqual({
-            status: 'Success',
-            data: 'data',
-        });
+        expect(result.current[0]).toEqual(success('data'));
     });
 });

@@ -1,29 +1,21 @@
 import { act, renderHook } from '@testing-library/react-hooks';
 import { useService } from '../../hooks/service';
-import { success } from '../../libs/remoteData';
+import { success, loading } from '../../libs/remoteData';
 
 describe('Hook `useService`', () => {
     const data = { custom: 'data' };
-    const service = () => Promise.resolve(success(data));
-
-    const remoteDataSuccess = {
-        status: 'Success',
-        data,
-    };
-
-    const remoteDataLoading = {
-        status: 'Loading',
-    };
+    const dataSuccess = success(data);
+    const service = () => Promise.resolve(dataSuccess);
 
     test('change `Loading` to `Success` status when service resolved', async () => {
         const deps = [1, 2];
         const { result, waitForNextUpdate } = renderHook(() => useService(service, deps));
 
-        expect(result.current[0]).toEqual(remoteDataLoading);
+        expect(result.current[0]).toEqual(loading);
 
         await waitForNextUpdate();
 
-        expect(result.current[0]).toEqual(remoteDataSuccess);
+        expect(result.current[0]).toEqual(dataSuccess);
     });
 
     test('method `reload` returns the same data ', async () => {
@@ -31,17 +23,17 @@ describe('Hook `useService`', () => {
 
         await waitForNextUpdate();
 
-        expect(result.current[0]).toEqual(remoteDataSuccess);
+        expect(result.current[0]).toEqual(dataSuccess);
 
         act(() => {
             result.current[1].reload();
         });
 
-        expect(result.current[0]).toEqual(remoteDataLoading);
+        expect(result.current[0]).toEqual(loading);
 
         await waitForNextUpdate();
 
-        expect(result.current[0]).toEqual(remoteDataSuccess);
+        expect(result.current[0]).toEqual(dataSuccess);
     });
 
     test('has `set` data method returns success remote data', async () => {
@@ -54,9 +46,6 @@ describe('Hook `useService`', () => {
             result.current[1].set(data);
         });
 
-        expect(result.current[0]).toEqual({
-            status: 'Success',
-            data,
-        });
+        expect(result.current[0]).toEqual(success(data));
     });
 });
