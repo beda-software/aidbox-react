@@ -214,7 +214,9 @@ export function makeReference<T extends AidboxResource>(
     };
 }
 
-export function isReference<T extends AidboxResource>(resource: T | AidboxReference<T>): boolean {
+export function isReference<T extends AidboxResource>(
+    resource: T | AidboxReference<T>
+): resource is AidboxReference<T> {
     return _.isEmpty(
         _.difference(_.keys(resource), [
             'id',
