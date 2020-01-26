@@ -1,3 +1,6 @@
+export type id = string;
+export type uri = string;
+
 export interface AidboxResource {
     resourceType: string;
     id?: string;
@@ -31,6 +34,15 @@ export interface BundleLink {
     id?: string;
     relation: string;
     url: uri;
+}
+
+export interface Patient {
+    readonly resourceType: 'Patient';
+    id?: id;
+    meta?: Meta;
+    implicitRules?: uri;
+    contained?: AidboxResource[];
+    active?: boolean;
 }
 
 export interface ValueSet {
