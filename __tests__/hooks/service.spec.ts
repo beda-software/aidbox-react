@@ -16,7 +16,8 @@ describe('Hook `useService`', () => {
     };
 
     test('change `Loading` to `Success` status when service resolved', async () => {
-        const { result, waitForNextUpdate } = renderHook(() => useService(service));
+        const deps = [1, 2];
+        const { result, waitForNextUpdate } = renderHook(() => useService(service, deps));
 
         expect(result.current[0]).toEqual(remoteDataLoading);
 
