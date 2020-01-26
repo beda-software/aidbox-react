@@ -10,6 +10,7 @@ import {
     getReference,
     makeReference,
     isReference,
+    extractBundleResources,
     getIncludedResource,
     getIncludedResources,
     getConcepts,
@@ -17,6 +18,7 @@ import {
 
 import { service } from '../../services/service';
 import { success, failure } from '../../libs/remoteData';
+import { Bundle, AidboxResource } from 'src/contrib/aidbox';
 
 jest.mock('../../services/service', () => {
     return { service: jest.fn(() => Promise.resolve(success('data'))) };
@@ -268,7 +270,48 @@ describe('Service `fhir`', () => {
         ).toBeFalsy();
     });
 
-    test('method `getIncludedResource` 1', () => {
+    test('method `extractBundleResources`', () => {
+        const bundle = {
+            resourceType: 'Bundle',
+            entry: [
+                {
+                    resource: {
+                        id: '1',
+                        resourceType: 'Patient',
+                    },
+                },
+                {
+                    resource: {
+                        id: '2',
+                        resourceType: 'Patient',
+                    },
+                },
+                {
+                    resource: {
+                        id: '3',
+                        resourceType: 'Patient',
+                    },
+                },
+                {
+                    resource: {
+                        id: '4',
+                        resourceType: 'customType',
+                    },
+                },
+            ],
+        } as Bundle<AidboxResource>;
+
+        expect(extractBundleResources(bundle)).toEqual({
+            Patient: [
+                { id: '1', resourceType: 'Patient' },
+                { id: '2', resourceType: 'Patient' },
+                { id: '3', resourceType: 'Patient' },
+            ],
+            customType: [{ id: '4', resourceType: 'customType' }],
+        });
+    });
+
+    test('method `getIncludedResource`', () => {
         const resources = {
             customType: [{ id: '1' }],
         };
