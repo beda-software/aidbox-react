@@ -4,6 +4,7 @@ import { usePager } from '../../hooks/pager';
 import { useService } from '../../hooks/service';
 import { success } from '../../libs/remoteData';
 import { getFHIRResources } from '../../services/fhir';
+import { SearchParams } from 'services/search';
 
 jest.mock('../../services/fhir', () => ({ getFHIRResources: jest.fn() }));
 jest.mock('../../hooks/service', () => ({ useService: jest.fn() }));
@@ -11,6 +12,7 @@ jest.mock('../../hooks/service', () => ({ useService: jest.fn() }));
 interface checkPageParameters {
     callNumber: number;
     pageNumber: number;
+    searchParams?: SearchParams;
 }
 
 describe('Hook `usePager`', () => {
@@ -18,7 +20,7 @@ describe('Hook `usePager`', () => {
     const resourcesOnPage = 2;
 
     const checkPage = (parameters: checkPageParameters) => {
-        const { callNumber, pageNumber } = parameters;
+        const { callNumber, pageNumber, searchParams = {} } = parameters;
         const [asyncFunction, [pageToLoad]] = (<jest.Mock>useService).mock.calls[callNumber];
 
         asyncFunction();
@@ -26,7 +28,7 @@ describe('Hook `usePager`', () => {
         const [fhirResourceType, fhirSearchParams] = (<jest.Mock>getFHIRResources).mock.calls[callNumber];
 
         expect(pageToLoad).toBe(pageNumber);
-        expect(fhirSearchParams).toEqual({ _count: 2, _page: pageNumber });
+        expect(fhirSearchParams).toEqual({ ...searchParams, _count: resourcesOnPage, _page: pageNumber });
         expect(fhirResourceType).toEqual(resourceType);
     };
 
@@ -40,7 +42,7 @@ describe('Hook `usePager`', () => {
 
             (<jest.Mock>useService).mockImplementation(() => [data]);
 
-            const { result } = renderHook(() => usePager<Bundle<any>>('Bundle', resourcesOnPage));
+            const { result } = renderHook(() => usePager<Bundle<any>>('Bundle'));
             const [remoteData, { hasNext }] = result.current;
 
             expect(hasNext).toBeFalsy();
@@ -83,18 +85,20 @@ describe('Hook `usePager`', () => {
             resourceType: 'type',
         });
 
+        const searchParams = { a: 1, b: 2 };
+
         (<jest.Mock>useService).mockImplementation(() => [data]);
 
-        const { result } = renderHook(() => usePager<Bundle<any>>(resourceType, resourcesOnPage));
+        const { result } = renderHook(() => usePager<Bundle<any>>(resourceType, resourcesOnPage, searchParams));
         const { loadNext } = result.current[1];
 
-        checkPage({ callNumber: 0, pageNumber: 1 });
+        checkPage({ callNumber: 0, pageNumber: 1, searchParams });
 
         act(() => {
             loadNext();
         });
 
-        checkPage({ callNumber: 1, pageNumber: 2 });
+        checkPage({ callNumber: 1, pageNumber: 2, searchParams });
     });
 
     test('method `reload`', async () => {
@@ -102,18 +106,19 @@ describe('Hook `usePager`', () => {
             id: 'fakeID',
             resourceType: 'type',
         });
+        const searchParams = { a: 1, b: 2 };
 
         (<jest.Mock>useService).mockImplementation(() => [data]);
 
-        const { result } = renderHook(() => usePager<Bundle<any>>(resourceType, resourcesOnPage));
+        const { result } = renderHook(() => usePager<Bundle<any>>(resourceType, resourcesOnPage, searchParams));
         const { reload } = result.current[1];
 
-        checkPage({ callNumber: 0, pageNumber: 1 });
+        checkPage({ callNumber: 0, pageNumber: 1, searchParams });
 
         act(() => {
             reload();
         });
 
-        checkPage({ callNumber: 1, pageNumber: 1 });
+        checkPage({ callNumber: 1, pageNumber: 1, searchParams });
     });
 });
