@@ -30,7 +30,7 @@ describe('Service `fhir`', () => {
     test('method `getFHIRResource`', async () => {
         const reference = {
             id: '1',
-            resourceType: 'type',
+            resourceType: 'Patient',
         };
 
         await getFHIRResource(reference);
@@ -62,14 +62,14 @@ describe('Service `fhir`', () => {
     });
 
     test('method `saveFHIRResource` 1', async () => {
-        const resourceWithId = { id: '1', resourceType: 'type' };
-        const resourceWithoutId = { resourceType: 'type' };
+        const resourceWithId = { id: '1', resourceType: 'Patient' };
+        const resourceWithoutId = { resourceType: 'Patient' };
 
         saveFHIRResource(resourceWithId);
 
         expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
             method: 'PUT',
-            url: '/type/1',
+            url: '/Patient/1',
             data: resourceWithId,
         });
 
@@ -77,7 +77,7 @@ describe('Service `fhir`', () => {
 
         expect((<jest.Mock>service).mock.calls[1][0]).toEqual({
             method: 'POST',
-            url: '/type',
+            url: '/Patient',
             data: resourceWithoutId,
         });
     });
@@ -85,9 +85,9 @@ describe('Service `fhir`', () => {
     test('method `saveFHIRResources`', async () => {
         const bundleType = 'transaction';
         const resources = [
-            { id: '1', resourceType: 'type' },
-            { id: '2', resourceType: 'type' },
-            { resourceType: 'type' },
+            { id: '1', resourceType: 'Patient' },
+            { id: '2', resourceType: 'Patient' },
+            { resourceType: 'Patient' },
         ];
 
         await saveFHIRResources(resources, bundleType);
@@ -101,30 +101,30 @@ describe('Service `fhir`', () => {
                     {
                         request: {
                             method: 'PUT',
-                            url: '/type/1',
+                            url: '/Patient/1',
                         },
                         resource: {
                             id: '1',
-                            resourceType: 'type',
+                            resourceType: 'Patient',
                         },
                     },
                     {
                         request: {
                             method: 'PUT',
-                            url: '/type/2',
+                            url: '/Patient/2',
                         },
                         resource: {
                             id: '2',
-                            resourceType: 'type',
+                            resourceType: 'Patient',
                         },
                     },
                     {
                         request: {
                             method: 'POST',
-                            url: '/type',
+                            url: '/Patient',
                         },
                         resource: {
-                            resourceType: 'type',
+                            resourceType: 'Patient',
                         },
                     },
                 ],
@@ -134,7 +134,7 @@ describe('Service `fhir`', () => {
 
     test('method `findFHIRResource`', async () => {
         const params = { id: 1 };
-        const resourceType = 'type';
+        const resourceType = 'Patient';
 
         await findFHIRResource(resourceType, params);
 
@@ -144,7 +144,10 @@ describe('Service `fhir`', () => {
             expect.objectContaining({
                 method: 'GET',
                 url: '/' + resourceType,
-                params,
+                params: {
+                    'active:not': [false],
+                    id: 1,
+                },
             })
         );
 
@@ -172,7 +175,7 @@ describe('Service `fhir`', () => {
     test('method `patchFHIRResource`', async () => {
         const resource = {
             id: '1',
-            resourceType: 'type',
+            resourceType: 'Patient',
         };
 
         await patchFHIRResource(resource);
@@ -211,7 +214,7 @@ describe('Service `fhir`', () => {
     test('method `forceDeleteFHIRResource`', async () => {
         const resource = {
             id: '1',
-            resourceType: 'type',
+            resourceType: 'Patient',
         };
         const params = { id: 2 };
 
@@ -226,7 +229,7 @@ describe('Service `fhir`', () => {
 
     test('method `getReference`', () => {
         const id = '1';
-        const resourceType = 'type';
+        const resourceType = 'Patient';
         const resource = { id, resourceType };
 
         expect(getReference(resource)).toEqual({
@@ -243,7 +246,7 @@ describe('Service `fhir`', () => {
 
     test('method `makeReference`', () => {
         const id = '1';
-        const resourceType = 'type';
+        const resourceType = 'Patient';
 
         expect(makeReference(resourceType, id)).toEqual({ id, resourceType });
     });
@@ -252,14 +255,14 @@ describe('Service `fhir`', () => {
         expect(
             isReference({
                 id: '1',
-                resourceType: 'type',
+                resourceType: 'Patient',
             })
         ).toBeTruthy();
 
         expect(
             isReference({
                 id: '1',
-                resourceType: 'type',
+                resourceType: 'Patient',
                 extraField: true,
             })
         ).toBeFalsy();
