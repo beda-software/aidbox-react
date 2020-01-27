@@ -13,7 +13,7 @@ import {
 } from '../services/fhir';
 
 export interface CRUDManager<T> {
-    handleSave: (updatedResource: T) => Promise<RemoteData<T>>;
+    handleSave: (updatedResource: T, relatedResources?: AidboxResource[]) => Promise<RemoteData<T>>;
     handleDelete: (resourceToDelete: T) => void;
 }
 
@@ -64,7 +64,6 @@ export function useCRUD<T extends AidboxResource>(
                         if (extracted) {
                             const resource = success(extracted[resourceType]![0]! as T);
                             setRemoteData(resource);
-
                             return resource;
                         } else {
                             return failure({ message: 'empty response from server' });

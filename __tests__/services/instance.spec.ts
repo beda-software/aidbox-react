@@ -33,6 +33,8 @@ describe('Service `instance`', () => {
             [{ a: [1, 2, 3] }, 'a=1&a=2&a=3'],
             [{ a: 1, b: 2 }, 'a=1&b=2'],
             [{ a: 1, b: undefined }, 'a=1'],
+            [{ a: 1, _has: 1 }, 'a=1&_has:1'],
+            [{ a: 1, _has: [1, 2, 3] }, 'a=1&_has:1&_has:2&_has:3'],
         ].forEach(([params, query]) => {
             test(`use for ${JSON.stringify(params)} 'returns ${query}`, () => {
                 expect(buildQueryParams(<object>params)).toEqual(query);
