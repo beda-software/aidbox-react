@@ -31,11 +31,10 @@ describe('Hook `usePager`', () => {
 
     describe('instance', () => {
         test('has correct default behavior', () => {
+            const { result } = renderHook(() => useCRUD<Patient>(resourceType));
             const {
-                result: {
-                    current: [remoteData],
-                },
-            } = renderHook(() => useCRUD<Patient>(resourceType));
+                current: [remoteData],
+            } = result;
 
             expect(remoteData).toEqual(success({ resourceType }));
         });
@@ -65,24 +64,38 @@ describe('Hook `usePager`', () => {
                 (<jest.Mock>getFHIRResource).mockImplementation(() => success('data'));
 
                 const { result, waitForNextUpdate } = renderHook(() => useCRUD<Patient>(resourceType, id, getOrCreate));
+                const {
+                    current: [firstRemoteData],
+                } = result;
 
-                expect(result.current[0]).toEqual(loading);
+                expect(firstRemoteData).toEqual(loading);
 
                 await waitForNextUpdate();
 
-                expect(result.current[0]).toEqual(success('data'));
+                const {
+                    current: [secondRemoteData],
+                } = result;
+
+                expect(secondRemoteData).toEqual(success('data'));
             });
 
             test('when FHIR response has error', async () => {
                 (<jest.Mock>getFHIRResource).mockImplementation(() => failure('error'));
 
                 const { result, waitForNextUpdate } = renderHook(() => useCRUD<Patient>(resourceType, id, getOrCreate));
+                const {
+                    current: [firstRemoteData],
+                } = result;
 
-                expect(result.current[0]).toEqual(loading);
+                expect(firstRemoteData).toEqual(loading);
 
                 await waitForNextUpdate();
 
-                expect(result.current[0]).toEqual(success(defaultData));
+                const {
+                    current: [secondRemoteData],
+                } = result;
+
+                expect(secondRemoteData).toEqual(success(defaultData));
             });
         });
 
@@ -100,8 +113,11 @@ describe('Hook `usePager`', () => {
                 const { result } = renderHook(() =>
                     useCRUD<Patient>(resourceType, undefined, getOrCreate, defaultResource)
                 );
+                const {
+                    current: [remoteData],
+                } = result;
 
-                expect(result.current[0]).toEqual(success(defaultResource));
+                expect(remoteData).toEqual(success(defaultResource));
             });
 
             test('when FHIR response has error', async () => {
@@ -111,11 +127,19 @@ describe('Hook `usePager`', () => {
                     useCRUD<Patient>(resourceType, id, getOrCreate, defaultResource)
                 );
 
-                expect(result.current[0]).toEqual(loading);
+                const {
+                    current: [firstRemoteData],
+                } = result;
+
+                expect(firstRemoteData).toEqual(loading);
 
                 await waitForNextUpdate();
 
-                expect(result.current[0]).toEqual(success({ ...defaultResource, id }));
+                const {
+                    current: [secondRemoteData],
+                } = result;
+
+                expect(secondRemoteData).toEqual(success({ ...defaultResource, id }));
             });
         });
     });
@@ -145,7 +169,11 @@ describe('Hook `usePager`', () => {
 
             await waitForNextUpdate();
 
-            expect(result.current[0]).toEqual(success('data'));
+            const {
+                current: [remoteData],
+            } = result;
+
+            expect(remoteData).toEqual(success('data'));
         });
 
         describe('has correct behavior with additional `relatedResources` parameter', () => {
@@ -158,19 +186,29 @@ describe('Hook `usePager`', () => {
                     }));
 
                     const { result, waitForNextUpdate } = renderHook(() => useCRUD<Patient>(resourceType));
-                    const { handleSave } = result.current[1];
+                    const {
+                        current: [firstRemoteData, { handleSave }],
+                    } = result;
 
-                    expect(result.current[0]).toEqual(success(resource));
+                    expect(firstRemoteData).toEqual(success(resource));
 
                     act(() => {
                         handleSave(resource, relatedResources);
                     });
 
-                    expect(result.current[0]).toEqual(loading);
+                    const {
+                        current: [secondRemoteData],
+                    } = result;
+
+                    expect(secondRemoteData).toEqual(loading);
 
                     await waitForNextUpdate();
 
-                    expect(result.current[0]).toEqual(
+                    const {
+                        current: [thirdRemoteData],
+                    } = result;
+
+                    expect(thirdRemoteData).toEqual(
                         success({
                             id: 'fakeID-1',
                             resourceType,
@@ -184,9 +222,11 @@ describe('Hook `usePager`', () => {
                     (<jest.Mock>extractBundleResources).mockImplementation(() => null);
 
                     const { result } = renderHook(() => useCRUD<Patient>(resourceType));
-                    const { handleSave } = result.current[1];
+                    const {
+                        current: [remoteData, { handleSave }],
+                    } = result;
 
-                    expect(result.current[0]).toEqual(success(resource));
+                    expect(remoteData).toEqual(success(resource));
 
                     let response;
 
@@ -207,19 +247,29 @@ describe('Hook `usePager`', () => {
                 (<jest.Mock>saveFHIRResources).mockImplementation(() => failure('error'));
 
                 const { result, waitForNextUpdate } = renderHook(() => useCRUD<Patient>(resourceType));
-                const { handleSave } = result.current[1];
+                const {
+                    current: [firstRemoteData, { handleSave }],
+                } = result;
 
-                expect(result.current[0]).toEqual(success(resource));
+                expect(firstRemoteData).toEqual(success(resource));
 
                 act(() => {
                     handleSave(resource, relatedResources);
                 });
 
-                expect(result.current[0]).toEqual(loading);
+                const {
+                    current: [secondtRemoteData],
+                } = result;
+
+                expect(secondtRemoteData).toEqual(loading);
 
                 await waitForNextUpdate();
 
-                expect(result.current[0]).toEqual(failure('error'));
+                const {
+                    current: [thirdtRemoteData],
+                } = result;
+
+                expect(thirdtRemoteData).toEqual(failure('error'));
             });
         });
     });
@@ -243,12 +293,19 @@ describe('Hook `usePager`', () => {
             handleDelete(resource);
         });
 
-        expect(result.current[0]).toEqual(loading);
+        const {
+            current: [secondRemoteData],
+        } = result;
+
+        expect(secondRemoteData).toEqual(loading);
 
         await waitForNextUpdate();
 
-        expect(result.current[0]).toEqual(success('data'));
+        const {
+            current: [thirdtRemoteData],
+        } = result;
 
+        expect(thirdtRemoteData).toEqual(success('data'));
         expect(deleteFHIRResource).toHaveBeenLastCalledWith(reference);
     });
 });

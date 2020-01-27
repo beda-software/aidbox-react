@@ -90,7 +90,9 @@ describe('Hook `usePager`', () => {
         (<jest.Mock>useService).mockImplementation(() => [data]);
 
         const { result } = renderHook(() => usePager<Bundle<any>>(resourceType, resourcesOnPage, searchParams));
-        const { loadNext } = result.current[1];
+        const {
+            current: [, { loadNext }],
+        } = result;
 
         checkPage({ callNumber: 0, pageNumber: 1, searchParams });
 
@@ -111,7 +113,9 @@ describe('Hook `usePager`', () => {
         (<jest.Mock>useService).mockImplementation(() => [data]);
 
         const { result } = renderHook(() => usePager<Bundle<any>>(resourceType, resourcesOnPage, searchParams));
-        const { reload } = result.current[1];
+        const {
+            current: [, { reload }],
+        } = result;
 
         checkPage({ callNumber: 0, pageNumber: 1, searchParams });
 

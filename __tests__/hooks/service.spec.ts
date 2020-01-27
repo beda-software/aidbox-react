@@ -8,32 +8,51 @@ describe('Hook `useService`', () => {
     const service = () => Promise.resolve(dataSuccess);
 
     test('change `Loading` to `Success` status when service resolved', async () => {
-        const deps = [1, 2];
-        const { result, waitForNextUpdate } = renderHook(() => useService(service, deps));
+        const { result, waitForNextUpdate } = renderHook(() => useService(service));
+        const {
+            current: [firstRemoteData],
+        } = result;
 
-        expect(result.current[0]).toEqual(loading);
+        expect(firstRemoteData).toEqual(loading);
 
         await waitForNextUpdate();
 
-        expect(result.current[0]).toEqual(dataSuccess);
+        const {
+            current: [secondRemoteData],
+        } = result;
+
+        expect(secondRemoteData).toEqual(dataSuccess);
     });
 
     test('method `reload` returns the same data ', async () => {
-        const { result, waitForNextUpdate } = renderHook(() => useService(service));
+        const deps = [1, 2];
+        const { result, waitForNextUpdate } = renderHook(() => useService(service, deps));
 
         await waitForNextUpdate();
 
-        expect(result.current[0]).toEqual(dataSuccess);
+        const {
+            current: [firstRemoteData, { reload }],
+        } = result;
+
+        expect(firstRemoteData).toEqual(dataSuccess);
 
         act(() => {
-            result.current[1].reload();
+            reload();
         });
 
-        expect(result.current[0]).toEqual(loading);
+        const {
+            current: [secondRemoteData],
+        } = result;
+
+        expect(secondRemoteData).toEqual(loading);
 
         await waitForNextUpdate();
 
-        expect(result.current[0]).toEqual(dataSuccess);
+        const {
+            current: [thirdRemoteData],
+        } = result;
+
+        expect(thirdRemoteData).toEqual(dataSuccess);
     });
 
     test('has `set` data method returns success remote data', async () => {
@@ -42,10 +61,18 @@ describe('Hook `useService`', () => {
 
         await waitForNextUpdate();
 
+        const {
+            current: [, { set }],
+        } = result;
+
         act(() => {
-            result.current[1].set(data);
+            set(data);
         });
 
-        expect(result.current[0]).toEqual(success(data));
+        const {
+            current: [remoteData],
+        } = result;
+
+        expect(remoteData).toEqual(success(data));
     });
 });
