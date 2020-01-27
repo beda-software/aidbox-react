@@ -8,6 +8,7 @@ import {
     saveFHIRResources,
     deleteFHIRResource,
     extractBundleResources,
+    getReference,
 } from '../../services/fhir';
 
 jest.mock('../../services/fhir', () => ({
@@ -88,10 +89,10 @@ describe('Hook `usePager`', () => {
         describe('has correct behavior with parameter `defaultResource`', () => {
             const id = 'toggle';
             const getOrCreate = true;
-            const defaultResource = {
+            const defaultResource: Patient = {
                 resourceType,
                 active: false,
-            } as Patient;
+            };
 
             test('when FHIR response success', async () => {
                 (<jest.Mock>getFHIRResource).mockImplementation(() => success('data'));
@@ -120,9 +121,9 @@ describe('Hook `usePager`', () => {
     });
 
     describe('method `handleSave`', () => {
-        const resource = {
+        const resource: Patient = {
             resourceType,
-        } as Patient;
+        };
 
         const relatedResources = [
             { id: 'fakeID-1', resourceType },
@@ -224,9 +225,14 @@ describe('Hook `usePager`', () => {
     });
 
     test('method `handleDelete`', async () => {
+        const reference = {
+            resourceType: 'customType',
+            id: 'fakeID',
+        };
+        (<jest.Mock>getReference).mockImplementation(() => reference);
         (<jest.Mock>deleteFHIRResource).mockImplementation(() => success('data'));
 
-        const resource = { resourceType } as Patient;
+        const resource: Patient = { resourceType };
 
         const { result, waitForNextUpdate } = renderHook(() => useCRUD<Patient>(resourceType));
         const {
@@ -242,5 +248,7 @@ describe('Hook `usePager`', () => {
         await waitForNextUpdate();
 
         expect(result.current[0]).toEqual(success('data'));
+
+        expect(deleteFHIRResource).toHaveBeenLastCalledWith(reference);
     });
 });
