@@ -75,18 +75,42 @@ export async function resolveDataResultPromises<T, F>(
     return resolveDataResults(remoteDataResults);
 }
 
+function createKeysMapTransformer<K = any>(keys: Array<K>) {
+    return <S = any, R = any>(data: S): R =>
+        keys.reduce((transformed, key, index) => {
+            transformed[key] = data[index];
+            return transformed;
+        }, {} as any);
+}
+
+export function resolveDataResultRecord<K, T, F>(
+    remoteDataResultRecord: Record<string, RemoteDataResult<T, F>>
+): RemoteDataResult<Record<string, T>, F[]> {
+    const keys = Object.keys(remoteDataResultRecord);
+    const remoteDataResults = Object.values(remoteDataResultRecord) as Array<RemoteDataResult<any>>;
+
+    return mapSuccess(resolveDataResults(remoteDataResults), createKeysMapTransformer(keys));
+}
+
+export async function resolveDataResultPromiseRecord<K, T, F>(
+    remoteDataResultRecord: Record<string, Promise<RemoteDataResult<T, F>>>
+): Promise<RemoteDataResult<Record<string, T>, F[]>> {
+    const keys = Object.keys(remoteDataResultRecord);
+    const remoteDataResults = (await Promise.all(Object.values(remoteDataResultRecord))) as Array<
+        RemoteDataResult<any>
+    >;
+    const result = mapSuccess(resolveDataResults(remoteDataResults), createKeysMapTransformer(keys));
+
+    return Promise.resolve(result);
+}
+
 export async function resolveServiceMap<I, F>(
     promisesMap: PromiseRemoteDataResultMap<I, F>
 ): Promise<RemoteDataResult<I, F[]>> {
     const keys = Object.keys(promisesMap);
     const responses = (await Promise.all(Object.values(promisesMap))) as Array<RemoteDataResult<any>>;
-
-    const result = <any>mapSuccess(resolveDataResults(responses), (responseData) =>
-        keys.reduce((transformed, key, index) => {
-            (transformed[key] = responseData[index]), transformed;
-            return transformed;
-        }, {})
-    );
+    const remoteDataResult = resolveDataResults(responses);
+    const result = mapSuccess(remoteDataResult, createKeysMapTransformer(keys));
 
     return Promise.resolve(result);
 }

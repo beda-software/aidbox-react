@@ -8,8 +8,10 @@ import {
     applyErrorTransformer,
     resolveServiceMap,
     resolveDataResults,
-    PromiseRemoteDataResultMap,
     resolveDataResultPromises,
+    resolveDataResultRecord,
+    resolveDataResultPromiseRecord,
+    PromiseRemoteDataResultMap,
 } from '../../services/service';
 
 describe('Service `service`', () => {
@@ -209,6 +211,74 @@ describe('Service `service`', () => {
                     Promise.resolve(success('data-bar')),
                 ])
             ).toEqual(success(['data-foo', 'data-bar']));
+        });
+    });
+
+    describe('Method `resolveDataResultRecord`', () => {
+        test('process when data are failed', () => {
+            expect(
+                resolveDataResultRecord({
+                    a: failure('error'),
+                    b: failure('error'),
+                })
+            ).toEqual(failure(['error', 'error']));
+        });
+
+        test('process when data are mixed', () => {
+            expect(
+                resolveDataResultRecord({
+                    a: success('data'),
+                    b: failure('error'),
+                })
+            ).toEqual(failure(['error']));
+        });
+
+        test('process when data are success', () => {
+            expect(
+                resolveDataResultRecord({
+                    a: success('data-foo'),
+                    b: success('data-bar'),
+                })
+            ).toEqual(
+                success({
+                    a: 'data-foo',
+                    b: 'data-bar',
+                })
+            );
+        });
+    });
+
+    describe('Method `resolveDataResultPromiseRecord`', () => {
+        test('process when data are failed', async () => {
+            expect(
+                await resolveDataResultPromiseRecord({
+                    a: Promise.resolve(failure('error')),
+                    b: Promise.resolve(failure('error')),
+                })
+            ).toEqual(failure(['error', 'error']));
+        });
+
+        test('process when data are mixed', async () => {
+            expect(
+                await resolveDataResultPromiseRecord({
+                    a: Promise.resolve(success('data')),
+                    b: Promise.resolve(failure('error')),
+                })
+            ).toEqual(failure(['error']));
+        });
+
+        test('process when data are success', async () => {
+            expect(
+                await resolveDataResultPromiseRecord({
+                    a: Promise.resolve(success('data-foo')),
+                    b: Promise.resolve(success('data-bar')),
+                })
+            ).toEqual(
+                success({
+                    a: 'data-foo',
+                    b: 'data-bar',
+                })
+            );
         });
     });
 });
