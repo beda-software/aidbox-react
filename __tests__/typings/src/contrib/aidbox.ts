@@ -1,9 +1,11 @@
 export type id = string;
 export type uri = string;
+export type instant = string;
 
 export interface AidboxResource {
     resourceType: string;
     id?: string;
+    meta?: Meta;
 }
 
 export interface AidboxReference<R extends AidboxResource> {
@@ -51,6 +53,8 @@ export interface ValueSet {
 
 export interface Meta {
     id?: string;
+    versionId?: id;
+    lastUpdated?: instant;
 }
 
 export interface User {
