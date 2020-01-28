@@ -9,6 +9,7 @@ import {
     resolveServiceMap,
     resolveDataResults,
     PromiseRemoteDataResultMap,
+    resolveDataResultPromises,
 } from '../../services/service';
 
 describe('Service `service`', () => {
@@ -173,7 +174,7 @@ describe('Service `service`', () => {
     });
 
     describe('Method `resolveDataResults`', () => {
-        test('process when data are failed', async () => {
+        test('process when data are failed', () => {
             expect(resolveDataResults([failure('error'), failure('error')])).toEqual(failure(['error', 'error']));
         });
 
@@ -185,6 +186,29 @@ describe('Service `service`', () => {
             expect(resolveDataResults([success('data-foo'), success('data-bar')])).toEqual(
                 success(['data-foo', 'data-bar'])
             );
+        });
+    });
+
+    describe('Method `resolveDataResultPromises`', () => {
+        test('process when data are failed', async () => {
+            expect(
+                await resolveDataResultPromises([Promise.resolve(failure('error')), Promise.resolve(failure('error'))])
+            ).toEqual(failure(['error', 'error']));
+        });
+
+        test('process when data are mixed', async () => {
+            expect(
+                await resolveDataResultPromises([Promise.resolve(success('data')), Promise.resolve(failure('error'))])
+            ).toEqual(failure(['error']));
+        });
+
+        test('process when data are success', async () => {
+            expect(
+                await resolveDataResultPromises([
+                    Promise.resolve(success('data-foo')),
+                    Promise.resolve(success('data-bar')),
+                ])
+            ).toEqual(success(['data-foo', 'data-bar']));
         });
     });
 });

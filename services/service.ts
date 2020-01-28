@@ -67,6 +67,14 @@ export function resolveDataResults<T, F>(remoteDataResults: Array<RemoteDataResu
     );
 }
 
+export async function resolveDataResultPromises<T, F>(
+    remoteDataResultPromises: Array<Promise<RemoteDataResult<T, F>>>
+): Promise<RemoteDataResult<T[], F[]>> {
+    const remoteDataResults = (await Promise.all(remoteDataResultPromises)) as Array<RemoteDataResult<T, F>>;
+
+    return resolveDataResults(remoteDataResults);
+}
+
 export async function resolveServiceMap<I, F>(
     promisesMap: PromiseRemoteDataResultMap<I, F>
 ): Promise<RemoteDataResult<I, F[]>> {
