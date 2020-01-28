@@ -126,10 +126,13 @@ export async function findFHIRResource<R extends AidboxResource>(
 }
 
 export async function saveFHIRResource<R extends AidboxResource>(resource: R): Promise<RemoteDataResult<R>> {
+    const versionId = resource.meta && resource.meta.versionId;
+
     return service({
         method: resource.id ? 'PUT' : 'POST',
         data: resource,
         url: `/${resource.resourceType}${resource.id ? '/' + resource.id : ''}`,
+        headers: resource.id && versionId ? { 'If-Match': versionId } : undefined,
     });
 }
 
@@ -142,13 +145,18 @@ export async function saveFHIRResources<R extends AidboxResource>(
         url: '/',
         data: {
             type: bundleType,
-            entry: _.map(resources, (resource) => ({
-                resource,
-                request: {
-                    method: resource.id ? 'PUT' : 'POST',
-                    url: `/${resource.resourceType}${resource.id ? '/' + resource.id : ''}`,
-                },
-            })),
+            entry: _.map(resources, (resource) => {
+                const versionId = resource.meta && resource.meta.versionId;
+
+                return {
+                    resource,
+                    request: {
+                        method: resource.id ? 'PUT' : 'POST',
+                        url: `/${resource.resourceType}${resource.id ? '/' + resource.id : ''}`,
+                        ifMatch: resource.id && versionId ? versionId : undefined,
+                    },
+                };
+            }),
         },
     });
 }
@@ -233,6 +241,7 @@ export function isReference<T extends AidboxResource>(
 }
 
 export type ResourcesMap<T extends AidboxResource> = { [x: string]: T[] | undefined };
+
 export function extractBundleResources<T extends AidboxResource>(bundle: Bundle<T>): ResourcesMap<T> {
     const entriesByResourceType = _.groupBy(bundle.entry, (entry) => entry.resource!.resourceType);
 
