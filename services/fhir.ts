@@ -132,7 +132,7 @@ export async function saveFHIRResource<R extends AidboxResource>(resource: R): P
         method: resource.id ? 'PUT' : 'POST',
         data: resource,
         url: `/${resource.resourceType}${resource.id ? '/' + resource.id : ''}`,
-        headers: resource.id && versionId ? { 'If-Match': versionId } : undefined,
+        ...(resource.id && versionId ? { headers: { 'If-Match': versionId } } : {}),
     });
 }
 
@@ -153,7 +153,7 @@ export async function saveFHIRResources<R extends AidboxResource>(
                     request: {
                         method: resource.id ? 'PUT' : 'POST',
                         url: `/${resource.resourceType}${resource.id ? '/' + resource.id : ''}`,
-                        ifMatch: resource.id && versionId ? versionId : undefined,
+                        ...(resource.id && versionId ? { ifMatch: versionId } : {}),
                     },
                 };
             }),
