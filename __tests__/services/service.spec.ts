@@ -7,10 +7,10 @@ import {
     applyDataTransformer,
     applyErrorTransformer,
     resolveServiceMap,
-    resolveDataResults,
-    resolveDataResultPromises,
-    resolveDataResultRecord,
-    resolveDataResultPromiseRecord,
+    resolveMap,
+    sequenceArray,
+    sequenceMap,
+    resolveArray,
     PromiseRemoteDataResultMap,
 } from '../../services/service';
 
@@ -175,49 +175,46 @@ describe('Service `service`', () => {
         });
     });
 
-    describe('Method `resolveDataResults`', () => {
+    describe('Method `sequenceArray`', () => {
         test('process when data are failed', () => {
-            expect(resolveDataResults([failure('error'), failure('error')])).toEqual(failure(['error', 'error']));
+            expect(sequenceArray([failure('error'), failure('error')])).toEqual(failure(['error', 'error']));
         });
 
         test('process when data are mixed', () => {
-            expect(resolveDataResults([success('data'), failure('error')])).toEqual(failure(['error']));
+            expect(sequenceArray([success('data'), failure('error')])).toEqual(failure(['error']));
         });
 
         test('process when data are success', () => {
-            expect(resolveDataResults([success('data-foo'), success('data-bar')])).toEqual(
+            expect(sequenceArray([success('data-foo'), success('data-bar')])).toEqual(
                 success(['data-foo', 'data-bar'])
             );
         });
     });
 
-    describe('Method `resolveDataResultPromises`', () => {
+    describe('Method `resolveArray`', () => {
         test('process when data are failed', async () => {
-            expect(
-                await resolveDataResultPromises([Promise.resolve(failure('error')), Promise.resolve(failure('error'))])
-            ).toEqual(failure(['error', 'error']));
+            expect(await resolveArray([Promise.resolve(failure('error')), Promise.resolve(failure('error'))])).toEqual(
+                failure(['error', 'error'])
+            );
         });
 
         test('process when data are mixed', async () => {
-            expect(
-                await resolveDataResultPromises([Promise.resolve(success('data')), Promise.resolve(failure('error'))])
-            ).toEqual(failure(['error']));
+            expect(await resolveArray([Promise.resolve(success('data')), Promise.resolve(failure('error'))])).toEqual(
+                failure(['error'])
+            );
         });
 
         test('process when data are success', async () => {
             expect(
-                await resolveDataResultPromises([
-                    Promise.resolve(success('data-foo')),
-                    Promise.resolve(success('data-bar')),
-                ])
+                await resolveArray([Promise.resolve(success('data-foo')), Promise.resolve(success('data-bar'))])
             ).toEqual(success(['data-foo', 'data-bar']));
         });
     });
 
-    describe('Method `resolveDataResultRecord`', () => {
+    describe('Method `sequenceMap`', () => {
         test('process when data are failed', () => {
             expect(
-                resolveDataResultRecord({
+                sequenceMap({
                     a: failure('error'),
                     b: failure('error'),
                 })
@@ -226,7 +223,7 @@ describe('Service `service`', () => {
 
         test('process when data are mixed', () => {
             expect(
-                resolveDataResultRecord({
+                sequenceMap({
                     a: success('data'),
                     b: failure('error'),
                 })
@@ -235,7 +232,7 @@ describe('Service `service`', () => {
 
         test('process when data are success', () => {
             expect(
-                resolveDataResultRecord({
+                sequenceMap({
                     a: success('data-foo'),
                     b: success('data-bar'),
                 })
@@ -248,10 +245,10 @@ describe('Service `service`', () => {
         });
     });
 
-    describe('Method `resolveDataResultPromiseRecord`', () => {
+    describe('Method `resolveMap`', () => {
         test('process when data are failed', async () => {
             expect(
-                await resolveDataResultPromiseRecord({
+                await resolveMap({
                     a: Promise.resolve(failure('error')),
                     b: Promise.resolve(failure('error')),
                 })
@@ -260,7 +257,7 @@ describe('Service `service`', () => {
 
         test('process when data are mixed', async () => {
             expect(
-                await resolveDataResultPromiseRecord({
+                await resolveMap({
                     a: Promise.resolve(success('data')),
                     b: Promise.resolve(failure('error')),
                 })
@@ -269,7 +266,7 @@ describe('Service `service`', () => {
 
         test('process when data are success', async () => {
             expect(
-                await resolveDataResultPromiseRecord({
+                await resolveMap({
                     a: Promise.resolve(success('data-foo')),
                     b: Promise.resolve(success('data-bar')),
                 })
