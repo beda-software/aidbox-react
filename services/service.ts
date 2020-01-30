@@ -76,7 +76,7 @@ export function sequenceArray<T, F>(remoteDataArray: Array<RemoteDataResult<T, F
     );
 }
 
-export function sequenceMap<I, F>(remoteDataMap: RemoteDataResultMap<I, F>): RemoteDataResult<I[], F[]> {
+export function sequenceMap<I, F>(remoteDataMap: RemoteDataResultMap<I, F>): RemoteDataResult<I, F[]> {
     const keys = Object.keys(remoteDataMap);
     const remoteDataArray = Object.values(remoteDataMap) as Array<RemoteDataResult<any>>;
 
