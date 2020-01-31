@@ -7,6 +7,10 @@ import {
     applyDataTransformer,
     applyErrorTransformer,
     resolveServiceMap,
+    resolveMap,
+    sequenceArray,
+    sequenceMap,
+    resolveArray,
     PromiseRemoteDataResultMap,
 } from '../../services/service';
 
@@ -166,6 +170,110 @@ describe('Service `service`', () => {
                 success({
                     foo: 'data-foo',
                     bar: 'data-bar',
+                })
+            );
+        });
+    });
+
+    describe('Method `sequenceArray`', () => {
+        test('process when data are failed', () => {
+            expect(sequenceArray([failure('error'), failure('error')])).toEqual(failure(['error', 'error']));
+        });
+
+        test('process when data are mixed', () => {
+            expect(sequenceArray([success('data'), failure('error')])).toEqual(failure(['error']));
+        });
+
+        test('process when data are success', () => {
+            expect(sequenceArray([success('data-foo'), success('data-bar')])).toEqual(
+                success(['data-foo', 'data-bar'])
+            );
+        });
+    });
+
+    describe('Method `resolveArray`', () => {
+        test('process when data are failed', async () => {
+            expect(await resolveArray([Promise.resolve(failure('error')), Promise.resolve(failure('error'))])).toEqual(
+                failure(['error', 'error'])
+            );
+        });
+
+        test('process when data are mixed', async () => {
+            expect(await resolveArray([Promise.resolve(success('data')), Promise.resolve(failure('error'))])).toEqual(
+                failure(['error'])
+            );
+        });
+
+        test('process when data are success', async () => {
+            expect(
+                await resolveArray([Promise.resolve(success('data-foo')), Promise.resolve(success('data-bar'))])
+            ).toEqual(success(['data-foo', 'data-bar']));
+        });
+    });
+
+    describe('Method `sequenceMap`', () => {
+        test('process when data are failed', () => {
+            expect(
+                sequenceMap({
+                    a: failure('error'),
+                    b: failure('error'),
+                })
+            ).toEqual(failure(['error', 'error']));
+        });
+
+        test('process when data are mixed', () => {
+            expect(
+                sequenceMap({
+                    a: success('data'),
+                    b: failure('error'),
+                })
+            ).toEqual(failure(['error']));
+        });
+
+        test('process when data are success', () => {
+            expect(
+                sequenceMap({
+                    a: success('data-foo'),
+                    b: success('data-bar'),
+                })
+            ).toEqual(
+                success({
+                    a: 'data-foo',
+                    b: 'data-bar',
+                })
+            );
+        });
+    });
+
+    describe('Method `resolveMap`', () => {
+        test('process when data are failed', async () => {
+            expect(
+                await resolveMap({
+                    a: Promise.resolve(failure('error')),
+                    b: Promise.resolve(failure('error')),
+                })
+            ).toEqual(failure(['error', 'error']));
+        });
+
+        test('process when data are mixed', async () => {
+            expect(
+                await resolveMap({
+                    a: Promise.resolve(success('data')),
+                    b: Promise.resolve(failure('error')),
+                })
+            ).toEqual(failure(['error']));
+        });
+
+        test('process when data are success', async () => {
+            expect(
+                await resolveMap({
+                    a: Promise.resolve(success('data-foo')),
+                    b: Promise.resolve(success('data-bar')),
+                })
+            ).toEqual(
+                success({
+                    a: 'data-foo',
+                    b: 'data-bar',
                 })
             );
         });

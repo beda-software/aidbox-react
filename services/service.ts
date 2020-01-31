@@ -52,22 +52,57 @@ export function mapFailure<S = any, F = any, R = any>(
 }
 
 export type PromiseRemoteDataResultMap<T, F> = { [P in keyof T]: Promise<RemoteDataResult<T[P], F>> };
-export async function resolveServiceMap<I, F>(
-    promisesMap: PromiseRemoteDataResultMap<I, F>
-): Promise<RemoteDataResult<I, F[]>> {
-    const keys = _.keys(promisesMap);
-    const values = _.values(promisesMap);
+export type RemoteDataResultMap<T, F> = { [P in keyof T]: RemoteDataResult<T[P], F> };
 
-    const responses = (await Promise.all(values)) as Array<RemoteDataResult<any>>;
+function createKeysMapTransformer<K = any>(keys: Array<K>) {
+    return <S = any, R = any>(data: S): R =>
+        keys.reduce((transformed, key, index) => {
+            transformed[key] = data[index];
+            return transformed;
+        }, {} as any);
+}
 
-    if (isSuccessAll(responses)) {
-        return success(
-            _.zipObject(
-                keys,
-                _.map(responses, (response) => response.data)
-            ) as I
-        );
-    } else {
-        return failure(_.compact(_.map(responses, (response) => (isFailure(response) ? response.error : undefined))));
+export function sequenceArray<T, F>(remoteDataArray: Array<RemoteDataResult<T, F>>): RemoteDataResult<T[], F[]> {
+    if (isSuccessAll(remoteDataArray)) {
+        return success(_.map(remoteDataArray, (remoteDataResult) => remoteDataResult.data));
     }
+
+    return failure(
+        _.compact(
+            _.map(remoteDataArray, (remoteDataResult) =>
+                isFailure(remoteDataResult) ? remoteDataResult.error : undefined
+            )
+        )
+    );
+}
+
+export function sequenceMap<I, F>(remoteDataMap: RemoteDataResultMap<I, F>): RemoteDataResult<I, F[]> {
+    const keys = Object.keys(remoteDataMap);
+    const remoteDataArray = Object.values(remoteDataMap) as Array<RemoteDataResult<any>>;
+
+    return mapSuccess(sequenceArray(remoteDataArray), createKeysMapTransformer(keys));
+}
+
+export async function resolveArray<T, F>(
+    promiseArray: Array<Promise<RemoteDataResult<T, F>>>
+): Promise<RemoteDataResult<T[], F[]>> {
+    const remoteDataResults = (await Promise.all(promiseArray)) as Array<RemoteDataResult<T, F>>;
+
+    return sequenceArray(remoteDataResults);
+}
+
+export async function resolveMap<I, F>(
+    promiseMap: PromiseRemoteDataResultMap<I, F>
+): Promise<RemoteDataResult<I, F[]>> {
+    const keys = Object.keys(promiseMap);
+    const remoteDataResults = (await Promise.all(Object.values(promiseMap))) as Array<RemoteDataResult<any>>;
+    const result = mapSuccess(sequenceArray(remoteDataResults), createKeysMapTransformer(keys));
+
+    return Promise.resolve(result);
+}
+
+export async function resolveServiceMap<I, F>(
+    promiseMap: PromiseRemoteDataResultMap<I, F>
+): Promise<RemoteDataResult<I, F[]>> {
+    return resolveMap(promiseMap);
 }
