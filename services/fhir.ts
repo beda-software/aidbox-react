@@ -145,7 +145,7 @@ export async function saveFHIRResources<R extends AidboxResource>(
         url: '/',
         data: {
             type: bundleType,
-            entry: _.map(resources, (resource) => {
+            entry: resources.map((resource) => {
                 const versionId = resource.meta && resource.meta.versionId;
 
                 return {
@@ -225,27 +225,28 @@ export function makeReference<T extends AidboxResource>(
 export function isReference<T extends AidboxResource>(
     resource: T | AidboxReference<T>
 ): resource is AidboxReference<T> {
-    return _.isEmpty(
-        _.difference(_.keys(resource), [
-            'id',
-            'resourceType',
-            '_id',
-            'resource',
-            'display',
-            'identifier',
-            'uri',
-            'localRef',
-            'extension',
-        ])
-    );
+    return !Object.keys(resource).filter(
+        (resource) =>
+            ['id', 'resourceType', '_id', 'resource', 'display', 'identifier', 'uri', 'localRef', 'extension'].indexOf(
+                resource
+            ) === -1
+    ).length;
 }
 
 export type ResourcesMap<T extends AidboxResource> = { [x: string]: T[] | undefined };
 
 export function extractBundleResources<T extends AidboxResource>(bundle: Bundle<T>): ResourcesMap<T> {
-    const entriesByResourceType = _.groupBy(bundle.entry, (entry) => entry.resource!.resourceType);
+    const entriesByResourceType = {};
 
-    return _.mapValues(entriesByResourceType, (entries) => _.map(entries, (entry) => entry.resource!));
+    bundle.entry?.forEach(function(entry) {
+        const type = entry.resource!.resourceType;
+        if (!entriesByResourceType[type]) {
+            entriesByResourceType[type] = [];
+        }
+        entriesByResourceType[type].push(entry.resource);
+    });
+
+    return entriesByResourceType;
 }
 
 export function getIncludedResource<T extends AidboxResource>(
@@ -253,7 +254,10 @@ export function getIncludedResource<T extends AidboxResource>(
     resources: ResourcesMap<T | any>,
     reference: AidboxReference<T>
 ) {
-    return _.find<T>(resources[reference.resourceType], (resource) => resource.id === reference.id);
+    const typeResources = resources[reference.resourceType];
+    const index = typeResources ? typeResources.findIndex((resource: T) => resource.id === reference.id) : -1;
+
+    return typeResources && index !== -1 ? typeResources[index] : undefined;
 }
 
 export function getIncludedResources<T extends AidboxResource>(
