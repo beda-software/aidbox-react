@@ -1,3 +1,4 @@
+import React from 'react';
 import { act, renderHook } from '@testing-library/react-hooks';
 import { useService } from '../../hooks/service';
 import { success, loading } from '../../libs/remoteData';
@@ -8,11 +9,13 @@ describe('Hook `useService`', () => {
     const service = () => Promise.resolve(dataSuccess);
 
     test('change `Loading` to `Success` status when service resolved', async () => {
+        const spyEffect = jest.spyOn(React, 'useEffect');
         const { result, waitForNextUpdate } = renderHook(() => useService(service));
         const {
             current: [firstRemoteData],
         } = result;
 
+        expect(spyEffect).toHaveBeenLastCalledWith(expect.anything(), [0]);
         expect(firstRemoteData).toEqual(loading);
 
         await waitForNextUpdate();
@@ -21,10 +24,12 @@ describe('Hook `useService`', () => {
             current: [secondRemoteData],
         } = result;
 
+        expect(spyEffect).toHaveBeenLastCalledWith(expect.anything(), [0]);
         expect(secondRemoteData).toEqual(dataSuccess);
     });
 
     test('method `reload` returns the same data ', async () => {
+        const spyEffect = jest.spyOn(React, 'useEffect');
         const deps = [1, 2];
         const { result, waitForNextUpdate } = renderHook(() => useService(service, deps));
 
@@ -34,6 +39,7 @@ describe('Hook `useService`', () => {
             current: [firstRemoteData, { reload }],
         } = result;
 
+        expect(spyEffect).toHaveBeenLastCalledWith(expect.anything(), [1, 2, 0]);
         expect(firstRemoteData).toEqual(dataSuccess);
 
         act(() => {
@@ -44,6 +50,7 @@ describe('Hook `useService`', () => {
             current: [secondRemoteData],
         } = result;
 
+        expect(spyEffect).toHaveBeenLastCalledWith(expect.anything(), [1, 2, 1]);
         expect(secondRemoteData).toEqual(loading);
 
         await waitForNextUpdate();
@@ -56,11 +63,13 @@ describe('Hook `useService`', () => {
     });
 
     test('has `set` data method returns success remote data', async () => {
-        const { result, waitForNextUpdate } = renderHook(() => useService(service));
+        const spyEffect = jest.spyOn(React, 'useEffect');
+        const deps = [1, 2];
+        const { result, waitForNextUpdate } = renderHook(() => useService(service, deps));
         const data = { custom: 'data-new' };
 
         await waitForNextUpdate();
-
+        expect(spyEffect).toHaveBeenLastCalledWith(expect.anything(), [1, 2, 0]);
         const {
             current: [, { set }],
         } = result;
@@ -74,5 +83,6 @@ describe('Hook `useService`', () => {
         } = result;
 
         expect(remoteData).toEqual(success(data));
+        expect(spyEffect).toHaveBeenLastCalledWith(expect.anything(), [1, 2, 0]);
     });
 });
