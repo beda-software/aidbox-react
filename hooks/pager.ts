@@ -37,7 +37,7 @@ export function usePager<T extends AidboxResource>(
             loadNext: () => setPageToLoad((currentPage) => currentPage + 1),
             hasNext:
                 isSuccess(resources) &&
-                Boolean(resources.data.link && resources.data.link?.some((link) => link.relation == 'next')),
+                Boolean(resources.data.link && resources.data.link.some((link) => link.relation == 'next')),
             reload: () => {
                 setPageToLoad(1);
                 setReloadsCount((c) => c + 1);
