@@ -7,6 +7,14 @@ node_js:
 install:
   - npm install
 
-script:
+stages:
+  - test
+  - coverage
+
+test:
   - npm run lint
-  - npm run coverage
+
+coverage:
+  script: npm run coverage
+  on:
+    repo: beda-software/aidbox-react
