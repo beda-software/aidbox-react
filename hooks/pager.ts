@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { useState } from 'react';
 
 import { AidboxResource, Bundle } from 'src/contrib/aidbox';
@@ -35,7 +34,9 @@ export function usePager<T extends AidboxResource>(
         resources,
         {
             loadNext: () => setPageToLoad((currentPage) => currentPage + 1),
-            hasNext: isSuccess(resources) && !!_.find(resources.data.link, { relation: 'next' }),
+            hasNext:
+                isSuccess(resources) &&
+                Boolean(resources.data.link && resources.data.link.some((link) => link.relation === 'next')),
             reload: () => {
                 setPageToLoad(1);
                 setReloadsCount((c) => c + 1);

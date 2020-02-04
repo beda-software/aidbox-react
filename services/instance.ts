@@ -1,20 +1,31 @@
 import axios from 'axios';
-import _ from 'lodash';
-
 import { Token } from './token';
 
+const flatten = (list: Array<any>): Array<any> =>
+    list.reduce((a: Array<any>, b: any) => a.concat(Array.isArray(b) ? flatten(b) : b), []);
+
+const encodeEntry = (key: string, value: any) => encodeURIComponent(key) + '=' + encodeURIComponent(value);
+
+const packEntry = (accumulator: Array<string>, [key, value]: [string, any]) => {
+    if (typeof value === 'undefined') {
+        return accumulator;
+    }
+
+    if (Array.isArray(value)) {
+        value.forEach((value) => {
+            accumulator.push(encodeEntry(key, Array.isArray(value) ? flatten(value) : value));
+        });
+    } else {
+        accumulator.push(encodeEntry(key, value));
+    }
+
+    return accumulator;
+};
+
 export function buildQueryParams(params: object) {
-    return _.chain(params)
-        .keys()
-        .flatMap((k) =>
-            _.map(
-                _.reject(_.concat([], params[k]), _.isUndefined),
-                // TODO: get rid of _has - wrong usage
-                (v) => encodeURIComponent(k) + (k === '_has' ? ':' : '=') + encodeURIComponent(v)
-            )
-        )
-        .join('&')
-        .value();
+    return Object.entries(params)
+        .reduce(packEntry, [] as Array<string>)
+        .join('&');
 }
 
 export const axiosInstance = axios.create({

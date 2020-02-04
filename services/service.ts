@@ -1,5 +1,4 @@
 import { AxiosRequestConfig } from 'axios';
-import _ from 'lodash';
 import { failure, isFailure, isSuccess, isSuccessAll, RemoteDataResult, success } from '../libs/remoteData';
 import { axiosInstance } from './instance';
 
@@ -64,15 +63,16 @@ function createKeysMapTransformer<K = any>(keys: Array<K>) {
 
 export function sequenceArray<T, F>(remoteDataArray: Array<RemoteDataResult<T, F>>): RemoteDataResult<T[], F[]> {
     if (isSuccessAll(remoteDataArray)) {
-        return success(_.map(remoteDataArray, (remoteDataResult) => remoteDataResult.data));
+        return success(remoteDataArray.map((remoteDataResult) => remoteDataResult.data));
     }
 
     return failure(
-        _.compact(
-            _.map(remoteDataArray, (remoteDataResult) =>
-                isFailure(remoteDataResult) ? remoteDataResult.error : undefined
-            )
-        )
+        remoteDataArray.reduce((accumulator, remoteDataResult: RemoteDataResult<T, F>) => {
+            if (isFailure(remoteDataResult)) {
+                accumulator.push(remoteDataResult.error);
+            }
+            return accumulator;
+        }, [] as Array<F>)
     );
 }
 

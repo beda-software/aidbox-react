@@ -308,6 +308,8 @@ describe('Service `fhir`', () => {
                 extraField: true,
             })
         ).toBeFalsy();
+
+        expect(isReference({} as any)).toBeTruthy();
     });
 
     test('method `extractBundleResources`', () => {
