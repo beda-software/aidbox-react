@@ -6,8 +6,7 @@ import { Token } from './token';
 const flatten = (list: Array<any>): Array<any> =>
     list.reduce((a: Array<any>, b: any) => a.concat(Array.isArray(b) ? flatten(b) : b), []);
 
-const encodeEntry = (key: string, value: any) =>
-    encodeURIComponent(key) + (key === '_has' ? ':' : '=') + encodeURIComponent(value);
+const encodeEntry = (key: string, value: any) => encodeURIComponent(key) + '=' + encodeURIComponent(value);
 
 const packEntry = (accumulator: Array<string>, [key, value]: [string, any]) => {
     if (typeof value === 'undefined') {

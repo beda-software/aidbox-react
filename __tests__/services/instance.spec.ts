@@ -36,8 +36,6 @@ describe('Service `instance`', () => {
             [{ a: [1, 2, [3, 4, [5, 6]]] }, 'a=1&a=2&a=3%2C4%2C5%2C6'],
             [{ a: 1, b: 2 }, 'a=1&b=2'],
             [{ a: 1, b: undefined }, 'a=1'],
-            [{ a: 1, _has: 1 }, 'a=1&_has:1'],
-            [{ a: 1, _has: [1, 2, 3] }, 'a=1&_has:1&_has:2&_has:3'],
             [{ a: { b: { c: 42 } } }, 'a=%5Bobject%20Object%5D'],
         ].forEach(([params, query]) => {
             test(`use for ${JSON.stringify(params)} 'returns ${query}`, () => {
