@@ -1,5 +1,4 @@
 import { AxiosRequestConfig } from 'axios';
-import _ from 'lodash';
 import { failure, isFailure, isSuccess, isSuccessAll, RemoteDataResult, success } from '../libs/remoteData';
 import { axiosInstance } from './instance';
 

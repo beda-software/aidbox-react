@@ -1,5 +1,3 @@
-import _ from 'lodash';
-
 import { AidboxReference, AidboxResource, Bundle, ValueSet } from 'src/contrib/aidbox';
 
 import { failure, RemoteDataResult } from '../libs/remoteData';

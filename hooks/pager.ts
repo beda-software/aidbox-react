@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { useState } from 'react';
 
 import { AidboxResource, Bundle } from 'src/contrib/aidbox';

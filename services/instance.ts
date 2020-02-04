@@ -1,6 +1,4 @@
 import axios from 'axios';
-import _ from 'lodash';
-
 import { Token } from './token';
 
 const flatten = (list: Array<any>): Array<any> =>
