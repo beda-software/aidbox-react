@@ -226,9 +226,9 @@ export function isReference<T extends AidboxResource>(
     resource: T | AidboxReference<T>
 ): resource is AidboxReference<T> {
     return !Object.keys(resource).filter(
-        (resource) =>
+        (attribute) =>
             ['id', 'resourceType', '_id', 'resource', 'display', 'identifier', 'uri', 'localRef', 'extension'].indexOf(
-                resource
+                attribute
             ) === -1
     ).length;
 }
@@ -237,15 +237,16 @@ export type ResourcesMap<T extends AidboxResource> = { [x: string]: T[] | undefi
 
 export function extractBundleResources<T extends AidboxResource>(bundle: Bundle<T>): ResourcesMap<T> {
     const entriesByResourceType = {};
-
-    bundle.entry?.forEach(function(entry) {
+    if (!bundle.entry) {
+        return entriesByResourceType;
+    }
+    bundle.entry.forEach(function(entry) {
         const type = entry.resource!.resourceType;
         if (!entriesByResourceType[type]) {
             entriesByResourceType[type] = [];
         }
         entriesByResourceType[type].push(entry.resource);
     });
-
     return entriesByResourceType;
 }
 
@@ -255,9 +256,11 @@ export function getIncludedResource<T extends AidboxResource>(
     reference: AidboxReference<T>
 ) {
     const typeResources = resources[reference.resourceType];
-    const index = typeResources ? typeResources.findIndex((resource: T) => resource.id === reference.id) : -1;
-
-    return typeResources && index !== -1 ? typeResources[index] : undefined;
+    if (!typeResources) {
+        return undefined;
+    }
+    const index = typeResources.findIndex((resource: T) => resource.id === reference.id);
+    return typeResources[index];
 }
 
 export function getIncludedResources<T extends AidboxResource>(
