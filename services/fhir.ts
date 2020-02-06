@@ -1,3 +1,4 @@
+import { AxiosRequestConfig } from 'axios';
 import { AidboxReference, AidboxResource, Bundle, ValueSet } from 'src/contrib/aidbox';
 
 import { failure, RemoteDataResult } from '../libs/remoteData';
@@ -82,22 +83,34 @@ function getInactiveSearchParam(resourceType: string) {
 export async function getFHIRResource<R extends AidboxResource>(
     reference: AidboxReference<R>
 ): Promise<RemoteDataResult<R>> {
-    return service({
+    return service(get(reference));
+}
+
+export function get<R extends AidboxResource>(reference: AidboxReference<R>): AxiosRequestConfig {
+    return {
         method: 'GET',
         url: `/${reference.resourceType}/${reference.id}`,
-    });
+    };
 }
 
 export async function getFHIRResources<R extends AidboxResource>(
     resourceType: R['resourceType'],
-    params: SearchParams,
+    searchParams: SearchParams,
     extraPath?: string
 ): Promise<RemoteDataResult<Bundle<R>>> {
-    return service({
+    return service(list(resourceType, searchParams, extraPath));
+}
+
+export function list<R extends AidboxResource>(
+    resourceType: R['resourceType'],
+    searchParams: SearchParams,
+    extraPath?: string
+): AxiosRequestConfig {
+    return {
         method: 'GET',
         url: extraPath ? `/${resourceType}/${extraPath}` : `/${resourceType}`,
-        params: { ...params, ...getInactiveSearchParam(resourceType) },
-    });
+        params: { ...searchParams, ...getInactiveSearchParam(resourceType) },
+    };
 }
 
 export async function findFHIRResource<R extends AidboxResource>(
@@ -105,7 +118,15 @@ export async function findFHIRResource<R extends AidboxResource>(
     params: SearchParams,
     extraPath?: string
 ): Promise<RemoteDataResult<R>> {
-    return await service({
+    return await service(find(resourceType, params, extraPath));
+}
+
+export function find<R extends AidboxResource>(
+    resourceType: R['resourceType'],
+    params: SearchParams,
+    extraPath?: string
+): AxiosRequestConfig {
+    return {
         method: 'GET',
         url: extraPath ? `/${resourceType}/${extraPath}` : `/${resourceType}`,
         params: { ...params, ...getInactiveSearchParam(resourceType) },
@@ -120,18 +141,22 @@ export async function findFHIRResource<R extends AidboxResource>(
                 throw new Error('Too many resources found');
             }
         },
-    });
+    };
 }
 
 export async function saveFHIRResource<R extends AidboxResource>(resource: R): Promise<RemoteDataResult<R>> {
+    return service(save(resource));
+}
+
+export function save<R extends AidboxResource>(resource: R): AxiosRequestConfig {
     const versionId = resource.meta && resource.meta.versionId;
 
-    return service({
+    return {
         method: resource.id ? 'PUT' : 'POST',
         data: resource,
         url: `/${resource.resourceType}${resource.id ? '/' + resource.id : ''}`,
         ...(resource.id && versionId ? { headers: { 'If-Match': versionId } } : {}),
-    });
+    };
 }
 
 export async function saveFHIRResources<R extends AidboxResource>(
@@ -162,11 +187,17 @@ export async function saveFHIRResources<R extends AidboxResource>(
 export async function patchFHIRResource<R extends AidboxResource>(
     resource: Partial<R> & Required<Pick<R, 'id' | 'resourceType'>>
 ): Promise<RemoteDataResult<R>> {
-    return service({
+    return service(patch(resource));
+}
+
+export function patch<R extends AidboxResource>(
+    resource: Partial<R> & Required<Pick<R, 'id' | 'resourceType'>>
+): AxiosRequestConfig {
+    return {
         method: 'PATCH',
         data: resource,
         url: `/${resource.resourceType}/${resource.id}`,
-    });
+    };
 }
 
 export async function deleteFHIRResource<R extends AidboxResource>(
@@ -180,24 +211,43 @@ export async function deleteFHIRResource<R extends AidboxResource>(
         return failure({});
     }
 
-    return service({
+    return service(_delete(resource));
+}
+
+// @TODO
+export function _delete<R extends AidboxResource>(resource: AidboxReference<R>): AxiosRequestConfig {
+    const inactiveMappingItem = inactiveMapping[resource.resourceType];
+
+    if (!inactiveMappingItem) {
+        console.error(`Please specify inactiveMapping for ${resource.resourceType} to mark item deleted`);
+        return {};
+    }
+
+    return {
         method: 'PATCH',
         url: `/${resource.resourceType}/${resource.id}`,
         data: {
             [inactiveMappingItem.statusField]: inactiveMappingItem.value,
         },
-    });
+    };
 }
 
 export async function forceDeleteFHIRResource<R extends AidboxResource>(
     resource: AidboxReference<R>,
-    params?: SearchParams
+    searchParams?: SearchParams
 ): Promise<RemoteDataResult<R>> {
-    return service({
+    return service(forceDelete(resource, searchParams));
+}
+
+export function forceDelete<R extends AidboxResource>(
+    resource: AidboxReference<R>,
+    searchParams?: SearchParams
+): AxiosRequestConfig {
+    return {
         method: 'DELETE',
         url: `/${resource.resourceType}/${resource.id}`,
-        params: params || {},
-    });
+        params: searchParams || {},
+    };
 }
 
 export function getReference<T extends AidboxResource>(resource: T, display?: string): AidboxReference<T> {
