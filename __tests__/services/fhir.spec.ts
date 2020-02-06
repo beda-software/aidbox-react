@@ -37,7 +37,7 @@ describe('Service `fhir`', () => {
 
         await getFHIRResource(reference);
 
-        expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
+        expect(service).toHaveBeenLastCalledWith({
             method: 'GET',
             url: '/' + reference.resourceType + '/' + reference.id,
         });
@@ -48,7 +48,7 @@ describe('Service `fhir`', () => {
 
         await getFHIRResources('user', params);
 
-        expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
+        expect(service).toHaveBeenLastCalledWith({
             method: 'GET',
             url: '/user',
             params,
@@ -56,7 +56,7 @@ describe('Service `fhir`', () => {
 
         await getFHIRResources('user', params, 'extra');
 
-        expect((<jest.Mock>service).mock.calls[1][0]).toEqual({
+        expect(service).toHaveBeenLastCalledWith({
             method: 'GET',
             url: '/user/extra',
             params,
@@ -69,7 +69,7 @@ describe('Service `fhir`', () => {
 
         saveFHIRResource(resourceWithId);
 
-        expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
+        expect(service).toHaveBeenLastCalledWith({
             method: 'PUT',
             url: '/Patient/1',
             data: resourceWithId,
@@ -77,7 +77,7 @@ describe('Service `fhir`', () => {
 
         await saveFHIRResource(resourceWithoutId);
 
-        expect((<jest.Mock>service).mock.calls[1][0]).toEqual({
+        expect(service).toHaveBeenLastCalledWith({
             method: 'POST',
             url: '/Patient',
             data: resourceWithoutId,
@@ -94,7 +94,7 @@ describe('Service `fhir`', () => {
 
         await saveFHIRResources(resources, bundleType);
 
-        expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
+        expect(service).toHaveBeenLastCalledWith({
             method: 'POST',
             url: '/',
             data: {
@@ -143,7 +143,7 @@ describe('Service `fhir`', () => {
 
             const config = (<jest.Mock>service).mock.calls[0][0];
 
-            expect(config).toEqual(
+            expect(service).toHaveBeenLastCalledWith(
                 expect.objectContaining({
                     method: 'GET',
                     url: '/' + resourceType,
@@ -182,9 +182,7 @@ describe('Service `fhir`', () => {
 
             await findFHIRResource(resourceType, params, extraPath);
 
-            const config = (<jest.Mock>service).mock.calls[0][0];
-
-            expect(config).toEqual(
+            expect(service).toHaveBeenLastCalledWith(
                 expect.objectContaining({
                     method: 'GET',
                     url: '/' + resourceType + '/' + extraPath,
@@ -205,7 +203,7 @@ describe('Service `fhir`', () => {
 
         await patchFHIRResource(resource);
 
-        expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
+        expect(service).toHaveBeenLastCalledWith({
             method: 'PATCH',
             data: resource,
             url: `/${resource.resourceType}/${resource.id}`,
@@ -227,7 +225,7 @@ describe('Service `fhir`', () => {
 
         await deleteFHIRResource(resource);
 
-        expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
+        expect(service).toHaveBeenLastCalledWith({
             method: 'PATCH',
             url: `/${resource.resourceType}/${resource.id}`,
             data: {
@@ -245,7 +243,7 @@ describe('Service `fhir`', () => {
 
             await forceDeleteFHIRResource(resource);
 
-            expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
+            expect(service).toHaveBeenLastCalledWith({
                 method: 'DELETE',
                 url: `/${resource.resourceType}/${resource.id}`,
                 params: {},
@@ -261,7 +259,7 @@ describe('Service `fhir`', () => {
 
             await forceDeleteFHIRResource(resource, params);
 
-            expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
+            expect(service).toHaveBeenLastCalledWith({
                 method: 'DELETE',
                 url: `/${resource.resourceType}/${resource.id}`,
                 params,
@@ -396,7 +394,7 @@ describe('Service `fhir`', () => {
 
         await getConcepts(valueSetId, params);
 
-        expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
+        expect(service).toHaveBeenLastCalledWith({
             method: 'GET',
             url: `/ValueSet/${valueSetId}/$expand`,
             params,
