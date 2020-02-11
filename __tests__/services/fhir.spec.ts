@@ -1,4 +1,5 @@
 import {
+    create,
     getFHIRResource,
     getFHIRResources,
     findFHIRResource,
@@ -27,6 +28,18 @@ jest.mock('../../services/service', () => {
 describe('Service `fhir`', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+    });
+
+    test('method `create`', async () => {
+        const resource = {
+            resourceType: 'Patient',
+        };
+
+        expect(create(resource)).toEqual({
+            method: 'POST',
+            url: `/${resource.resourceType}`,
+            data: resource,
+        });
     });
 
     test('method `getFHIRResource`', async () => {
