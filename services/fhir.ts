@@ -1,9 +1,10 @@
 import { AxiosRequestConfig } from 'axios';
-import { AidboxReference, AidboxResource, Bundle, ValueSet } from 'src/contrib/aidbox';
+import { AidboxReference, AidboxResource, ValueSet, Bundle } from 'src/contrib/aidbox';
 
 import { failure, RemoteDataResult } from '../libs/remoteData';
+import { buildQueryParams } from './instance';
 import { SearchParams } from './search';
-import { service, resolveArray } from './service';
+import { service } from './service';
 
 interface InactiveMappingItem {
     searchField: string;
@@ -127,6 +128,7 @@ export function get<R extends AidboxResource>(
     return {
         method: 'GET',
         url: `/${reference.resourceType}/${reference.id}`,
+        params: searchParams || {},
     };
 }
 
@@ -376,8 +378,29 @@ export async function applyFHIRService<T, F>(request: AxiosRequestConfig): Promi
     return service(request);
 }
 
-export async function applyFHIRServices<T, F>(
-    requests: Array<AxiosRequestConfig>
+export async function applyFHIRServices<R extends AidboxResource, T, F>(
+    requests: Array<AxiosRequestConfig>,
+    type: 'transaction' | 'batch' = 'transaction'
 ): Promise<RemoteDataResult<T[], F[]>> {
-    return resolveArray(requests.map(service));
+    return service({
+        method: 'POST',
+        url: '/',
+        data: {
+            type,
+            entry: requests.map(({ method, url, data, headers }) => {
+                const extractHeader = (header: string) =>
+                    headers && headers[header] ? buildQueryParams(headers[header.replace('-', '')]) : undefined;
+
+                return {
+                    resource: data,
+                    request: {
+                        method,
+                        url,
+                        ifMatch: extractHeader('If-Match'),
+                        ifNoneExist: extractHeader('If-None-Exist'),
+                    },
+                };
+            }),
+        },
+    });
 }
