@@ -1,12 +1,22 @@
 import {
     create,
+    createFHIRResource,
+    get,
     getFHIRResource,
+    list,
     getFHIRResources,
+    find,
     findFHIRResource,
+    update,
+    updateFHIRResource,
+    save,
     saveFHIRResource,
     saveFHIRResources,
+    patch,
     patchFHIRResource,
+    forceDelete,
     forceDeleteFHIRResource,
+    markAsDeleted,
     deleteFHIRResource,
     getReference,
     makeReference,
@@ -15,30 +25,90 @@ import {
     getIncludedResource,
     getIncludedResources,
     getConcepts,
+    applyFHIRService,
+    applyFHIRServices,
 } from '../../services/fhir';
-
 import { service } from '../../services/service';
 import { success, failure } from '../../libs/remoteData';
 import { Bundle, AidboxResource } from 'src/contrib/aidbox';
+import { AxiosTransformer } from 'axios';
 
 jest.mock('../../services/service', () => {
     return { service: jest.fn(() => Promise.resolve(success('data'))) };
 });
 
-describe('Service `fhir`', () => {
+describe.only('Service `fhir`', () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
 
-    test('method `create`', async () => {
-        const resource = {
+    describe('method `create`', () => {
+        test('create resource without search parameters`', async () => {
+            const resource = {
+                resourceType: 'Patient',
+            };
+
+            expect(create(resource)).toEqual({
+                method: 'POST',
+                url: `/${resource.resourceType}`,
+                data: resource,
+            });
+        });
+
+        test('create resource with search parameters`', () => {
+            const resource = {
+                resourceType: 'Patient',
+            };
+            const searchParams = {
+                param: 'value',
+            };
+
+            expect(create(resource, searchParams)).toEqual({
+                method: 'POST',
+                url: `/${resource.resourceType}`,
+                data: resource,
+                headers: {
+                    'If-None-Exist': searchParams,
+                },
+            });
+        });
+    });
+
+    test('method `createFHIRResource`', async () => {
+        const reference = {
+            id: '1',
             resourceType: 'Patient',
         };
 
-        expect(create(resource)).toEqual({
-            method: 'POST',
-            url: `/${resource.resourceType}`,
-            data: resource,
+        await createFHIRResource(reference);
+
+        expect(service).toHaveBeenLastCalledWith(create(reference));
+    });
+
+    describe('method `get`', () => {
+        test('get resource without search params', () => {
+            const reference = {
+                id: '1',
+                resourceType: 'Patient',
+            };
+
+            expect(get(reference)).toEqual({
+                method: 'GET',
+                url: '/' + reference.resourceType + '/' + reference.id,
+            });
+        });
+        test('get resource with search params', () => {
+            const reference = {
+                id: '1',
+                resourceType: 'Patient',
+            };
+            const searchParams = { param: 'value' };
+
+            expect(get(reference, searchParams)).toEqual({
+                method: 'GET',
+                url: '/' + reference.resourceType + '/' + reference.id,
+                params: searchParams,
+            });
         });
     });
 
@@ -50,50 +120,138 @@ describe('Service `fhir`', () => {
 
         await getFHIRResource(reference);
 
-        expect(service).toHaveBeenLastCalledWith({
-            method: 'GET',
-            url: '/' + reference.resourceType + '/' + reference.id,
-        });
+        expect(service).toHaveBeenLastCalledWith(get(reference));
     });
 
-    test('method `getFHIRResources`', async () => {
+    describe('method `list`', () => {
         const params = { id: 2 };
 
-        await getFHIRResources('user', params);
-
-        expect(service).toHaveBeenLastCalledWith({
-            method: 'GET',
-            url: '/user',
-            params,
+        test('create axios config without extra path', () => {
+            expect(list('user', params)).toEqual({
+                method: 'GET',
+                url: '/user',
+                params,
+            });
         });
 
-        await getFHIRResources('user', params, 'extra');
-
-        expect(service).toHaveBeenLastCalledWith({
-            method: 'GET',
-            url: '/user/extra',
-            params,
+        test('create axios config with extra path', () => {
+            expect(list('user', params, 'extra')).toEqual({
+                method: 'GET',
+                url: '/user/extra',
+                params,
+            });
         });
     });
 
-    test('method `saveFHIRResource` 1', async () => {
-        const resourceWithId = { id: '1', resourceType: 'Patient' };
-        const resourceWithoutId = { resourceType: 'Patient' };
+    describe('method `getFHIRResources`', () => {
+        const params = { id: 2 };
 
-        saveFHIRResource(resourceWithId);
+        test('get resource without extra path', async () => {
+            await getFHIRResources('user', params);
 
-        expect(service).toHaveBeenLastCalledWith({
-            method: 'PUT',
-            url: '/Patient/1',
-            data: resourceWithId,
+            expect(service).toHaveBeenLastCalledWith(list('user', params));
         });
 
-        await saveFHIRResource(resourceWithoutId);
+        test('get resource with extra path', async () => {
+            await getFHIRResources('user', params, 'extra');
 
-        expect(service).toHaveBeenLastCalledWith({
-            method: 'POST',
-            url: '/Patient',
-            data: resourceWithoutId,
+            expect(service).toHaveBeenLastCalledWith(list('user', params, 'extra'));
+        });
+    });
+
+    describe('method `update`', () => {
+        test('update resource with meta versionId', () => {
+            const resource = {
+                resourceType: 'Patient',
+                id: '1',
+                meta: {
+                    versionId: '1',
+                },
+            };
+
+            const searchParams = { param: 'value' };
+
+            expect(update(resource, searchParams)).toEqual({
+                method: 'POST',
+                url: `/${resource.resourceType}/${resource.id}`,
+                params: searchParams,
+                headers: {
+                    'If-Match': resource.meta.versionId,
+                },
+            });
+        });
+        test('update resource without meta versionId', () => {
+            const resource = {
+                resourceType: 'Patient',
+                id: '1',
+            };
+
+            expect(update(resource)).toEqual({
+                method: 'POST',
+                url: `/${resource.resourceType}/${resource.id}`,
+            });
+        });
+    });
+
+    test('method `updateFHIRResource`', async () => {
+        const resource = {
+            resourceType: 'Patient',
+            id: '1',
+        };
+        const searchParams = { param: 'value' };
+
+        await updateFHIRResource(resource, searchParams);
+
+        expect(service).toHaveBeenLastCalledWith(update(resource, searchParams));
+    });
+
+    describe('method `save`', () => {
+        test('save resource without id', () => {
+            const resource = {
+                resourceType: 'Patient',
+            };
+
+            expect(save(resource)).toEqual({
+                method: 'POST',
+                url: '/Patient',
+                data: resource,
+            });
+        });
+
+        test('save resource with id', () => {
+            const resource = {
+                resourceType: 'Patient',
+                id: '1',
+            };
+
+            expect(save(resource)).toEqual({
+                method: 'PUT',
+                url: '/Patient/1',
+                data: resource,
+            });
+        });
+    });
+
+    describe('method `saveFHIRResource`', () => {
+        test('save resource without id', async () => {
+            const resource = {
+                resourceType: 'Patient',
+            };
+
+            await saveFHIRResource(resource);
+
+            expect(service).toHaveBeenLastCalledWith(save(resource));
+        });
+
+        test('save resource with id', async () => {
+            const resource = {
+                resourceType: 'Patient',
+                id: '1',
+            };
+
+            await saveFHIRResource(resource);
+
+            expect(service).toHaveBeenLastCalledWith(save(resource));
         });
     });
 
@@ -147,16 +305,15 @@ describe('Service `fhir`', () => {
         });
     });
 
-    describe('method `findFHIRResource`', () => {
+    describe('method `find`', () => {
         test('has correct behavior', async () => {
             const params = { id: 1 };
             const resourceType = 'Patient';
 
-            await findFHIRResource(resourceType, params);
+            const axiosRequestConfig = find(resourceType, params);
+            const transformResponse = axiosRequestConfig.transformResponse as AxiosTransformer;
 
-            const config = (<jest.Mock>service).mock.calls[0][0];
-
-            expect(service).toHaveBeenLastCalledWith(
+            expect(axiosRequestConfig).toEqual(
                 expect.objectContaining({
                     method: 'GET',
                     url: '/' + resourceType,
@@ -169,22 +326,22 @@ describe('Service `fhir`', () => {
 
             expect(() => {
                 const response = '';
-                config.transformResponse(response);
+                transformResponse(response);
             }).toThrow();
 
             expect(() => {
                 const response = '{"entry":[]}';
-                config.transformResponse(response);
+                transformResponse(response);
             }).toThrow();
 
             const response = '{"entry":[{"resource": "data"}]}';
-            const transformed = config.transformResponse(response);
+            const transformed = transformResponse(response);
 
             expect(transformed).toBe('data');
 
             expect(() => {
                 const response = '{"entry":[{"resource": "a"}, {"resource": "b"}]}';
-                config.transformResponse(response);
+                transformResponse(response);
             }).toThrow();
         });
 
@@ -193,9 +350,7 @@ describe('Service `fhir`', () => {
             const resourceType = 'Patient';
             const extraPath = 'extraPath';
 
-            await findFHIRResource(resourceType, params, extraPath);
-
-            expect(service).toHaveBeenLastCalledWith(
+            expect(find(resourceType, params, extraPath)).toEqual(
                 expect.objectContaining({
                     method: 'GET',
                     url: '/' + resourceType + '/' + extraPath,
@@ -208,6 +363,63 @@ describe('Service `fhir`', () => {
         });
     });
 
+    describe('method `findFHIRResource`', () => {
+        test('has correct behavior', async () => {
+            const params = { id: 1 };
+            const resourceType = 'Patient';
+
+            await findFHIRResource(resourceType, params);
+            const { transformResponse, ...restFindResult } = find(resourceType, params);
+
+            expect(service).toHaveBeenLastCalledWith(expect.objectContaining(restFindResult));
+        });
+
+        test('receive extra path argument', async () => {
+            const params = { id: 1 };
+            const resourceType = 'Patient';
+            const extraPath = 'extraPath';
+
+            await findFHIRResource(resourceType, params, extraPath);
+
+            const { transformResponse, ...restFindResult } = find(resourceType, params, extraPath);
+
+            expect(service).toHaveBeenLastCalledWith(expect.objectContaining(restFindResult));
+        });
+    });
+
+    describe('method `patch`', () => {
+        test('patch resource without search params', async () => {
+            const resource = {
+                id: '1',
+                resourceType: 'Patient',
+            };
+
+            await patchFHIRResource(resource);
+
+            expect(patch(resource)).toEqual({
+                method: 'PATCH',
+                data: resource,
+                url: `/${resource.resourceType}/${resource.id}`,
+            });
+        });
+        test('patch resource with search params', async () => {
+            const resource = {
+                id: '1',
+                resourceType: 'Patient',
+            };
+            const searchParams = { param: 'value' };
+
+            await patchFHIRResource(resource);
+
+            expect(patch(resource, searchParams)).toEqual({
+                method: 'PATCH',
+                data: resource,
+                url: `/${resource.resourceType}/${resource.id}`,
+                params: searchParams,
+            });
+        });
+    });
+
     test('method `patchFHIRResource`', async () => {
         const resource = {
             id: '1',
@@ -216,47 +428,66 @@ describe('Service `fhir`', () => {
 
         await patchFHIRResource(resource);
 
-        expect(service).toHaveBeenLastCalledWith({
-            method: 'PATCH',
-            data: resource,
-            url: `/${resource.resourceType}/${resource.id}`,
+        expect(service).toHaveBeenLastCalledWith(patch(resource));
+    });
+
+    describe('method `markAsDeleted`', () => {
+        test('delete unknown resource', () => {
+            const result = markAsDeleted({
+                id: '1',
+                resourceType: 'Unknown',
+            });
+
+            expect(result).toEqual({});
+        });
+
+        test('delete location resource', () => {
+            const resource = {
+                id: '1',
+                resourceType: 'Location',
+            };
+
+            expect(markAsDeleted(resource)).toEqual({
+                method: 'PATCH',
+                url: `/${resource.resourceType}/${resource.id}`,
+                data: {
+                    status: 'inactive',
+                },
+            });
         });
     });
 
-    test('method `deleteFHIRResource`', async () => {
-        const result = await deleteFHIRResource({
-            id: '1',
-            resourceType: 'Unknown',
+    describe('method `deleteFHIRResource`', () => {
+        test('delete unknown resource', async () => {
+            const resource = {
+                id: '1',
+                resourceType: 'Unknown',
+            };
+            const result = await deleteFHIRResource(resource);
+
+            expect(result).toEqual(failure({}));
         });
 
-        expect(result).toEqual(failure({}));
+        test('delete location resource', async () => {
+            const resource = {
+                id: '1',
+                resourceType: 'Location',
+            };
 
-        const resource = {
-            id: '1',
-            resourceType: 'Location',
-        };
+            await deleteFHIRResource(resource);
 
-        await deleteFHIRResource(resource);
-
-        expect(service).toHaveBeenLastCalledWith({
-            method: 'PATCH',
-            url: `/${resource.resourceType}/${resource.id}`,
-            data: {
-                status: 'inactive',
-            },
+            expect(service).toHaveBeenLastCalledWith(markAsDeleted(resource));
         });
     });
 
-    describe('method `forceDeleteFHIRResource`', () => {
+    describe('method `forceDelete`', () => {
         test('has correct behavior without `params` argument', async () => {
             const resource = {
                 id: '1',
                 resourceType: 'Patient',
             };
 
-            await forceDeleteFHIRResource(resource);
-
-            expect(service).toHaveBeenLastCalledWith({
+            expect(forceDelete(resource)).toEqual({
                 method: 'DELETE',
                 url: `/${resource.resourceType}/${resource.id}`,
                 params: {},
@@ -270,13 +501,36 @@ describe('Service `fhir`', () => {
             };
             const params = { id: 2 };
 
-            await forceDeleteFHIRResource(resource, params);
-
-            expect(service).toHaveBeenLastCalledWith({
+            expect(forceDelete(resource, params)).toEqual({
                 method: 'DELETE',
                 url: `/${resource.resourceType}/${resource.id}`,
                 params,
             });
+        });
+    });
+
+    describe('method `forceDeleteFHIRResource`', () => {
+        test('has correct behavior without `params` argument', async () => {
+            const resource = {
+                id: '1',
+                resourceType: 'Patient',
+            };
+
+            await forceDeleteFHIRResource(resource);
+
+            expect(service).toHaveBeenLastCalledWith(forceDelete(resource));
+        });
+
+        test('has correct behavior with `params` argument', async () => {
+            const resource = {
+                id: '1',
+                resourceType: 'Patient',
+            };
+            const params = { id: 2 };
+
+            await forceDeleteFHIRResource(resource, params);
+
+            expect(service).toHaveBeenLastCalledWith(forceDelete(resource, params));
         });
     });
 
@@ -412,5 +666,63 @@ describe('Service `fhir`', () => {
             url: `/ValueSet/${valueSetId}/$expand`,
             params,
         });
+    });
+
+    test('method `applyFHIRService`', async () => {
+        const resource = {
+            resourceType: 'Patient',
+        };
+
+        const result = await applyFHIRService(create(resource));
+
+        expect(result).toEqual(success('data'));
+    });
+
+    test('method `applyFHIRServices`', async () => {
+        const result = await applyFHIRServices([
+            create({
+                resourceType: 'Patient',
+            }),
+            update({
+                resourceType: 'Patient',
+                id: '42',
+            }),
+            forceDelete({
+                resourceType: 'Patient',
+                id: '42',
+            }),
+        ]);
+
+        expect(service).toHaveBeenLastCalledWith({
+            url: '/',
+            method: 'POST',
+            data: {
+                type: 'transaction',
+                entry: [
+                    {
+                        request: {
+                            method: 'POST',
+                            url: '/Patient',
+                        },
+                        resource: {
+                            resourceType: 'Patient',
+                        },
+                    },
+                    {
+                        request: {
+                            method: 'POST',
+                            url: '/Patient/42',
+                        },
+                    },
+                    {
+                        request: {
+                            method: 'DELETE',
+                            url: '/Patient/42',
+                        },
+                    },
+                ],
+            },
+        });
+        expect(result).toEqual(success('data'));
     });
 });
