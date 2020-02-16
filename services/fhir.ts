@@ -2,7 +2,6 @@ import { AxiosRequestConfig } from 'axios';
 import { AidboxReference, AidboxResource, ValueSet, Bundle } from 'src/contrib/aidbox';
 
 import { failure, RemoteDataResult } from '../libs/remoteData';
-import { buildQueryParams } from './instance';
 import { SearchParams } from './search';
 import { service } from './service';
 
@@ -109,7 +108,7 @@ export function update(resource: AidboxResource, searchParams?: SearchParams): A
     return {
         method: 'POST',
         url: `/${resource.resourceType}/${resource.id}`,
-        params: searchParams || {},
+        ...(searchParams ? { params: searchParams } : {}),
         ...(resource.id && versionId ? { headers: { 'If-Match': versionId } } : {}),
     };
 }
@@ -128,7 +127,7 @@ export function get<R extends AidboxResource>(
     return {
         method: 'GET',
         url: `/${reference.resourceType}/${reference.id}`,
-        params: searchParams || {},
+        ...(searchParams ? { params: searchParams } : {}),
     };
 }
 
@@ -254,11 +253,10 @@ export async function deleteFHIRResource<R extends AidboxResource>(
         return failure({});
     }
 
-    return service(_delete(resource, searchParams));
+    return service(markAsDeleted(resource, searchParams));
 }
 
-// @TODO
-export function _delete<R extends AidboxResource>(
+export function markAsDeleted<R extends AidboxResource>(
     resource: AidboxReference<R>,
     searchParams?: SearchParams
 ): AxiosRequestConfig {
@@ -388,16 +386,13 @@ export async function applyFHIRServices<R extends AidboxResource, T, F>(
         data: {
             type,
             entry: requests.map(({ method, url, data, headers }) => {
-                const extractHeader = (header: string) =>
-                    headers && headers[header] ? buildQueryParams(headers[header.replace('-', '')]) : undefined;
-
                 return {
                     resource: data,
                     request: {
                         method,
                         url,
-                        ifMatch: extractHeader('If-Match'),
-                        ifNoneExist: extractHeader('If-None-Exist'),
+                        ...(headers && headers['If-Match'] ? { ifMatch: headers['If-Match'] } : {}),
+                        ...(headers && headers['If-None-Exist'] ? { ifNoneExist: headers['If-None-Exist'] } : {}),
                     },
                 };
             }),
