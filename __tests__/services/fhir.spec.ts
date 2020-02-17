@@ -172,7 +172,7 @@ describe.only('Service `fhir`', () => {
             const searchParams = { param: 'value' };
 
             expect(update(resource, searchParams)).toEqual({
-                method: 'POST',
+                method: 'PUT',
                 url: `/${resource.resourceType}/${resource.id}`,
                 params: searchParams,
                 headers: {
@@ -187,7 +187,7 @@ describe.only('Service `fhir`', () => {
             };
 
             expect(update(resource)).toEqual({
-                method: 'POST',
+                method: 'PUT',
                 url: `/${resource.resourceType}/${resource.id}`,
             });
         });
@@ -710,7 +710,7 @@ describe.only('Service `fhir`', () => {
                     },
                     {
                         request: {
-                            method: 'POST',
+                            method: 'PUT',
                             url: '/Patient/42',
                         },
                     },
