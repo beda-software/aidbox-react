@@ -75,38 +75,38 @@ describe.only('Service `fhir`', () => {
     });
 
     test('method `createFHIRResource`', async () => {
-        const reference = {
+        const resource = {
             id: '1',
             resourceType: 'Patient',
         };
 
-        await createFHIRResource(reference);
+        await createFHIRResource(resource);
 
-        expect(service).toHaveBeenLastCalledWith(create(reference));
+        expect(service).toHaveBeenLastCalledWith(create(resource));
     });
 
     describe('method `get`', () => {
         test('get resource without search params', () => {
-            const reference = {
+            const resource = {
                 id: '1',
                 resourceType: 'Patient',
             };
 
-            expect(get(reference)).toEqual({
+            expect(get(resource)).toEqual({
                 method: 'GET',
-                url: '/' + reference.resourceType + '/' + reference.id,
+                url: '/' + resource.resourceType + '/' + resource.id,
             });
         });
         test('get resource with search params', () => {
-            const reference = {
+            const resource = {
                 id: '1',
                 resourceType: 'Patient',
             };
             const searchParams = { param: 'value' };
 
-            expect(get(reference, searchParams)).toEqual({
+            expect(get(resource, searchParams)).toEqual({
                 method: 'GET',
-                url: '/' + reference.resourceType + '/' + reference.id,
+                url: '/' + resource.resourceType + '/' + resource.id,
                 params: searchParams,
             });
         });
