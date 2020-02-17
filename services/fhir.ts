@@ -387,7 +387,7 @@ export async function applyFHIRServices<R extends AidboxResource, T, F>(
             type,
             entry: requests.map(({ method, url, data, headers }) => {
                 return {
-                    resource: data,
+                    ...(data ? { resource: data } : {}),
                     request: {
                         method,
                         url,
