@@ -456,11 +456,13 @@ describe.only('Service `fhir`', () => {
 
     describe('method `markAsDeleted`', () => {
         test('delete unknown resource', () => {
+            const spy = jest.spyOn(console, 'error').mockImplementation();
             const result = markAsDeleted({
                 id: '1',
                 resourceType: 'Unknown',
             });
 
+            expect(spy).toBeCalled();
             expect(result).toEqual({});
         });
 
@@ -482,12 +484,15 @@ describe.only('Service `fhir`', () => {
 
     describe('method `deleteFHIRResource`', () => {
         test('delete unknown resource', async () => {
+            const spy = jest.spyOn(console, 'error').mockImplementation();
+
             const resource = {
                 id: '1',
                 resourceType: 'Unknown',
             };
             const result = await deleteFHIRResource(resource);
 
+            expect(spy).toBeCalled();
             expect(result).toEqual(failure({}));
         });
 
