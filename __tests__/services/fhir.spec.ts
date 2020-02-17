@@ -191,6 +191,29 @@ describe.only('Service `fhir`', () => {
                 url: `/${resource.resourceType}/${resource.id}`,
             });
         });
+
+        test('update resource without id', () => {
+            const resource = {
+                resourceType: 'Patient',
+            };
+
+            expect(() => {
+                update(resource);
+            }).toThrow();
+        });
+
+        test('update resource without id with search params', () => {
+            const resource = {
+                resourceType: 'Patient',
+            };
+            const searchParams = { param: 'value' };
+
+            expect(update(resource, searchParams)).toEqual({
+                method: 'PUT',
+                url: `/${resource.resourceType}`,
+                params: searchParams,
+            });
+        });
     });
 
     test('method `updateFHIRResource`', async () => {

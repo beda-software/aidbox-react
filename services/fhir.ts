@@ -105,9 +105,14 @@ export async function updateFHIRResource<R extends AidboxResource>(
 
 export function update(resource: AidboxResource, searchParams?: SearchParams): AxiosRequestConfig {
     const versionId = resource.meta && resource.meta.versionId;
+
+    if (!resource.id && !searchParams) {
+        throw new Error('Resourse id and search parameters are not specified');
+    }
+
     return {
         method: 'PUT',
-        url: `/${resource.resourceType}/${resource.id}`,
+        url: `/${resource.resourceType}${resource.id ? '/' + resource.id : ''}`,
         ...(searchParams ? { params: searchParams } : {}),
         ...(resource.id && versionId ? { headers: { 'If-Match': versionId } } : {}),
     };
