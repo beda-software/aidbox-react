@@ -105,7 +105,11 @@ export async function updateFHIRResource<R extends AidboxResource>(
 
 export function update(resource: AidboxResource, searchParams?: SearchParams): AxiosRequestConfig {
     if (searchParams) {
-        return { method: 'PUT', url: `/${resource.resourceType}`, params: searchParams };
+        return {
+            method: 'PUT',
+            url: `/${resource.resourceType}${resource.id ? '/' + resource.id : ''}`,
+            params: searchParams,
+        };
     }
 
     if (resource.id) {
