@@ -1,4 +1,10 @@
-import _ from 'lodash';
+import _map from 'lodash/map';
+import _mapValues from 'lodash/mapValues';
+import _isEmpty from 'lodash/isEmpty';
+import _difference from 'lodash/difference';
+import _keys from 'lodash/keys';
+import _find from 'lodash/find';
+import _groupBy from 'lodash/groupBy';
 
 import { AidboxReference, AidboxResource, Bundle, ValueSet } from 'src/contrib/aidbox';
 
@@ -145,7 +151,7 @@ export async function saveFHIRResources<R extends AidboxResource>(
         url: '/',
         data: {
             type: bundleType,
-            entry: _.map(resources, (resource) => {
+            entry: _map(resources, (resource) => {
                 const versionId = resource.meta && resource.meta.versionId;
 
                 return {
@@ -225,8 +231,8 @@ export function makeReference<T extends AidboxResource>(
 export function isReference<T extends AidboxResource>(
     resource: T | AidboxReference<T>
 ): resource is AidboxReference<T> {
-    return _.isEmpty(
-        _.difference(_.keys(resource), [
+    return _isEmpty(
+        _difference(_keys(resource), [
             'id',
             'resourceType',
             '_id',
@@ -243,9 +249,9 @@ export function isReference<T extends AidboxResource>(
 export type ResourcesMap<T extends AidboxResource> = { [x: string]: T[] | undefined };
 
 export function extractBundleResources<T extends AidboxResource>(bundle: Bundle<T>): ResourcesMap<T> {
-    const entriesByResourceType = _.groupBy(bundle.entry, (entry) => entry.resource!.resourceType);
+    const entriesByResourceType = _groupBy(bundle.entry, (entry) => entry.resource!.resourceType);
 
-    return _.mapValues(entriesByResourceType, (entries) => _.map(entries, (entry) => entry.resource!));
+    return _mapValues(entriesByResourceType, (entries) => _map(entries, (entry) => entry.resource!));
 }
 
 export function getIncludedResource<T extends AidboxResource>(
@@ -253,7 +259,7 @@ export function getIncludedResource<T extends AidboxResource>(
     resources: ResourcesMap<T | any>,
     reference: AidboxReference<T>
 ) {
-    return _.find<T>(resources[reference.resourceType], (resource) => resource.id === reference.id);
+    return _find<T>(resources[reference.resourceType], (resource) => resource.id === reference.id);
 }
 
 export function getIncludedResources<T extends AidboxResource>(

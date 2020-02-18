@@ -1,20 +1,25 @@
 import axios from 'axios';
-import _ from 'lodash';
+import _map from 'lodash/map';
+import _flatMap from 'lodash/flatMap';
+import _join from 'lodash/join';
+import _reject from 'lodash/reject';
+import _keys from 'lodash/keys';
+import _concat from 'lodash/concat';
+import _isUndefined from 'lodash/isUndefined';
 
 import { Token } from './token';
 
 export function buildQueryParams(params: object) {
-    return _.chain(params)
-        .keys()
-        .flatMap((k) =>
-            _.map(
-                _.reject(_.concat([], params[k]), _.isUndefined),
+    return _join(
+        _flatMap(_keys(params), (k) =>
+            _map(
+                _reject(_concat([], params[k]), _isUndefined),
                 // TODO: get rid of _has - wrong usage
                 (v) => encodeURIComponent(k) + (k === '_has' ? ':' : '=') + encodeURIComponent(v)
             )
-        )
-        .join('&')
-        .value();
+        ),
+        '&'
+    );
 }
 
 export const axiosInstance = axios.create({
