@@ -69,6 +69,10 @@ const inactiveMapping: InactiveMapping = {
     },
 };
 
+function isObject(value: any): boolean {
+    return typeof value === 'object' && value !== null;
+}
+
 function getInactiveSearchParam(resourceType: string) {
     const item = inactiveMapping[resourceType];
 
@@ -398,12 +402,14 @@ export function transformToBundleEntry<R extends AidboxResource>(config: AxiosRe
     }
     const request = {
         method,
-        url: typeof params === 'object' && params !== null ? url + '?' + buildQueryParams(params) : url,
+        url: isObject(params) ? url + '?' + buildQueryParams(params) : url,
     };
 
     ['If-Modified-Since', 'If-Match', 'If-None-Match', 'If-None-Exist'].forEach((header) => {
         if (headers[header]) {
-            request[toCamelCase(header)] = headers[header];
+            request[toCamelCase(header)] = isObject(headers[header])
+                ? buildQueryParams(headers[header])
+                : headers[header];
         }
     });
 
