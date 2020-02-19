@@ -1,5 +1,5 @@
 import { AxiosRequestConfig } from 'axios';
-import { AidboxReference, AidboxResource, ValueSet, Bundle } from 'src/contrib/aidbox';
+import { AidboxReference, AidboxResource, ValueSet, Bundle, BundleEntry } from 'src/contrib/aidbox';
 
 import { failure, RemoteDataResult } from '../libs/remoteData';
 import { SearchParams } from './search';
@@ -91,8 +91,8 @@ export function create(resource: AidboxResource, searchParams?: SearchParams): A
     return {
         method: 'POST',
         url: `/${resource.resourceType}`,
+        params: searchParams,
         data: resource,
-        ...(searchParams ? { headers: { 'If-None-Exist': searchParams } } : {}),
     };
 }
 
@@ -105,11 +105,7 @@ export async function updateFHIRResource<R extends AidboxResource>(
 
 export function update(resource: AidboxResource, searchParams?: SearchParams): AxiosRequestConfig {
     if (searchParams) {
-        return {
-            method: 'PUT',
-            url: `/${resource.resourceType}${resource.id ? '/' + resource.id : ''}`,
-            params: searchParams,
-        };
+        return { method: 'PUT', url: `/${resource.resourceType}`, params: searchParams };
     }
 
     if (resource.id) {
@@ -118,7 +114,7 @@ export function update(resource: AidboxResource, searchParams?: SearchParams): A
         return {
             method: 'PUT',
             url: `/${resource.resourceType}/${resource.id}`,
-            ...(versionId ? { headers: { 'If-Match': versionId } } : {}),
+            params: resource.id && versionId ? versionId : undefined,
         };
     }
 
@@ -205,7 +201,7 @@ export function save<R extends AidboxResource>(resource: R): AxiosRequestConfig 
         method: resource.id ? 'PUT' : 'POST',
         data: resource,
         url: `/${resource.resourceType}${resource.id ? '/' + resource.id : ''}`,
-        ...(resource.id && versionId ? { headers: { 'If-Match': versionId } } : {}),
+        params: resource.id && versionId ? versionId : undefined,
     };
 }
 
@@ -226,7 +222,7 @@ export async function saveFHIRResources<R extends AidboxResource>(
                     request: {
                         method: resource.id ? 'PUT' : 'POST',
                         url: `/${resource.resourceType}${resource.id ? '/' + resource.id : ''}`,
-                        ...(resource.id && versionId ? { ifMatch: versionId } : {}),
+                        params: resource.id && versionId ? versionId : undefined,
                     },
                 };
             }),
@@ -388,6 +384,38 @@ export async function applyFHIRService<T, F>(request: AxiosRequestConfig): Promi
     return service(request);
 }
 
+const toCamelCase = (str: string): string => {
+    const withFirstLowerLetter = str.charAt(0).toLowerCase() + str.slice(1);
+    return withFirstLowerLetter.replace('-', '');
+};
+
+export function transformToBundleEntry<R extends AidboxResource>(config: AxiosRequestConfig): BundleEntry<R> | null {
+    const { method, url, data, headers = [] } = config;
+
+    if (!method || !url) {
+        return null;
+    }
+
+    const request = ['If-Modified-Since', 'If-Match', 'If-None-Match', 'If-None-Exist'].reduce(
+        (request, header) => {
+            if (!headers[header]) {
+                return request;
+            }
+
+            return {
+                ...request,
+                [toCamelCase(header)]: headers[header],
+            };
+        },
+        { method, url }
+    );
+
+    return {
+        ...(data ? { resource: data } : {}),
+        request,
+    };
+}
+
 export async function applyFHIRServices<R extends AidboxResource, T, F>(
     requests: Array<AxiosRequestConfig>,
     type: 'transaction' | 'batch' = 'transaction'
@@ -397,17 +425,7 @@ export async function applyFHIRServices<R extends AidboxResource, T, F>(
         url: '/',
         data: {
             type,
-            entry: requests.map(({ method, url, data, headers }) => {
-                return {
-                    ...(data ? { resource: data } : {}),
-                    request: {
-                        method,
-                        url,
-                        ...(headers && headers['If-Match'] ? { ifMatch: headers['If-Match'] } : {}),
-                        ...(headers && headers['If-None-Exist'] ? { ifNoneExist: headers['If-None-Exist'] } : {}),
-                    },
-                };
-            }),
+            entry: requests.map(transformToBundleEntry).filter((entry) => entry !== null),
         },
     });
 }
