@@ -300,7 +300,7 @@ export function forceDelete<R extends AidboxResource>(
     return {
         method: 'DELETE',
         url: `/${resource.resourceType}/${resource.id}`,
-        params: searchParams || {},
+        ...(searchParams ? { params: searchParams } : {}),
     };
 }
 

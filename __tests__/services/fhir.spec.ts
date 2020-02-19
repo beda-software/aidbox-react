@@ -513,7 +513,6 @@ describe.only('Service `fhir`', () => {
             expect(forceDelete(resource)).toEqual({
                 method: 'DELETE',
                 url: `/${resource.resourceType}/${resource.id}`,
-                params: {},
             });
         });
 
