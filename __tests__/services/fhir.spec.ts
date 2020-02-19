@@ -66,10 +66,8 @@ describe.only('Service `fhir`', () => {
             expect(create(resource, searchParams)).toEqual({
                 method: 'POST',
                 url: `/${resource.resourceType}`,
+                params: searchParams,
                 data: resource,
-                headers: {
-                    'If-None-Exist': searchParams,
-                },
             });
         });
     });
@@ -169,12 +167,9 @@ describe.only('Service `fhir`', () => {
                 },
             };
 
-            const searchParams = { param: 'value' };
-
-            expect(update(resource, searchParams)).toEqual({
+            expect(update(resource)).toEqual({
                 method: 'PUT',
                 url: `/${resource.resourceType}/${resource.id}`,
-                params: searchParams,
                 headers: {
                     'If-Match': resource.meta.versionId,
                 },

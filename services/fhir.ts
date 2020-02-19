@@ -4,6 +4,7 @@ import { AidboxReference, AidboxResource, ValueSet, Bundle, BundleEntry } from '
 import { failure, RemoteDataResult } from '../libs/remoteData';
 import { SearchParams } from './search';
 import { service } from './service';
+import { buildQueryParams } from './instance';
 
 interface InactiveMappingItem {
     searchField: string;
@@ -114,7 +115,7 @@ export function update(resource: AidboxResource, searchParams?: SearchParams): A
         return {
             method: 'PUT',
             url: `/${resource.resourceType}/${resource.id}`,
-            params: resource.id && versionId ? versionId : undefined,
+            ...(versionId ? { headers: { 'If-Match': versionId } } : {}),
         };
     }
 
@@ -222,7 +223,7 @@ export async function saveFHIRResources<R extends AidboxResource>(
                     request: {
                         method: resource.id ? 'PUT' : 'POST',
                         url: `/${resource.resourceType}${resource.id ? '/' + resource.id : ''}`,
-                        params: resource.id && versionId ? versionId : undefined,
+                        ...(resource.id && versionId ? { ifMatch: versionId } : {}),
                     },
                 };
             }),
@@ -404,7 +405,7 @@ export function transformToBundleEntry<R extends AidboxResource>(config: AxiosRe
 
             return {
                 ...request,
-                [toCamelCase(header)]: headers[header],
+                [toCamelCase(header)]: buildQueryParams(headers[header]),
             };
         },
         { method, url }
