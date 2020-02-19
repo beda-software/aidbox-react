@@ -391,25 +391,21 @@ const toCamelCase = (str: string): string => {
 };
 
 export function transformToBundleEntry<R extends AidboxResource>(config: AxiosRequestConfig): BundleEntry<R> | null {
-    const { method, url, data, headers = [] } = config;
+    const { method, url, data, params, headers = [] } = config;
 
     if (!method || !url) {
         return null;
     }
+    const request = {
+        method,
+        url: typeof params === 'object' && params !== null ? url + '?' + buildQueryParams(params) : url,
+    };
 
-    const request = ['If-Modified-Since', 'If-Match', 'If-None-Match', 'If-None-Exist'].reduce(
-        (request, header) => {
-            if (!headers[header]) {
-                return request;
-            }
-
-            return {
-                ...request,
-                [toCamelCase(header)]: buildQueryParams(headers[header]),
-            };
-        },
-        { method, url }
-    );
+    ['If-Modified-Since', 'If-Match', 'If-None-Match', 'If-None-Exist'].forEach((header) => {
+        if (headers[header]) {
+            request[toCamelCase(header)] = headers[header];
+        }
+    });
 
     return {
         ...(data ? { resource: data } : {}),
