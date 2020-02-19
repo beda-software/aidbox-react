@@ -27,6 +27,7 @@ import {
     getConcepts,
     applyFHIRService,
     applyFHIRServices,
+    transformToBundleEntry,
 } from '../../services/fhir';
 import { service } from '../../services/service';
 import { success, failure } from '../../libs/remoteData';
@@ -452,10 +453,11 @@ describe.only('Service `fhir`', () => {
     describe('method `markAsDeleted`', () => {
         test('delete unknown resource', () => {
             const spy = jest.spyOn(console, 'error').mockImplementation();
-            const result = markAsDeleted({
+            const resource = {
                 id: '1',
                 resourceType: 'Unknown',
-            });
+            };
+            const result = markAsDeleted(resource);
 
             expect(spy).toBeCalled();
             expect(result).toEqual({});
@@ -475,12 +477,29 @@ describe.only('Service `fhir`', () => {
                 },
             });
         });
+
+        test('delete resource with params', () => {
+            const resource = {
+                id: '1',
+                resourceType: 'Schedule',
+            };
+            const searchParams = { param: 'value' };
+            const result = markAsDeleted(resource, searchParams);
+
+            expect(result).toEqual({
+                method: 'PATCH',
+                url: `/${resource.resourceType}/${resource.id}`,
+                data: {
+                    active: false,
+                },
+                params: searchParams,
+            });
+        });
     });
 
     describe('method `deleteFHIRResource`', () => {
         test('delete unknown resource', async () => {
             const spy = jest.spyOn(console, 'error').mockImplementation();
-
             const resource = {
                 id: '1',
                 resourceType: 'Unknown',
@@ -599,57 +618,76 @@ describe.only('Service `fhir`', () => {
         expect(isReference({} as any)).toBeTruthy();
     });
 
-    test('method `extractBundleResources`', () => {
-        const bundle = {
-            resourceType: 'Bundle',
-            entry: [
-                {
-                    resource: {
-                        id: '1',
-                        resourceType: 'Patient',
-                    },
-                },
-                {
-                    resource: {
-                        id: '2',
-                        resourceType: 'Patient',
-                    },
-                },
-                {
-                    resource: {
-                        id: '3',
-                        resourceType: 'Patient',
-                    },
-                },
-                {
-                    resource: {
-                        id: '4',
-                        resourceType: 'customType',
-                    },
-                },
-            ],
-        } as Bundle<AidboxResource>;
+    describe('method `extractBundleResources`', () => {
+        test("extact empty object when there's not entry property", () => {
+            const bundle = {} as Bundle<AidboxResource>;
 
-        expect(extractBundleResources(bundle)).toEqual({
-            Patient: [
-                { id: '1', resourceType: 'Patient' },
-                { id: '2', resourceType: 'Patient' },
-                { id: '3', resourceType: 'Patient' },
-            ],
-            customType: [{ id: '4', resourceType: 'customType' }],
+            expect(extractBundleResources(bundle)).toEqual({});
+        });
+        test("extract bundle there's entry field property", () => {
+            const bundle = {
+                resourceType: 'Bundle',
+                entry: [
+                    {
+                        resource: {
+                            id: '1',
+                            resourceType: 'Patient',
+                        },
+                    },
+                    {
+                        resource: {
+                            id: '2',
+                            resourceType: 'Patient',
+                        },
+                    },
+                    {
+                        resource: {
+                            id: '3',
+                            resourceType: 'Patient',
+                        },
+                    },
+                    {
+                        resource: {
+                            id: '4',
+                            resourceType: 'customType',
+                        },
+                    },
+                ],
+            } as Bundle<AidboxResource>;
+
+            expect(extractBundleResources(bundle)).toEqual({
+                Patient: [
+                    { id: '1', resourceType: 'Patient' },
+                    { id: '2', resourceType: 'Patient' },
+                    { id: '3', resourceType: 'Patient' },
+                ],
+                customType: [{ id: '4', resourceType: 'customType' }],
+            });
         });
     });
 
-    test('method `getIncludedResource`', () => {
+    describe('method `getIncludedResource`', () => {
         const resources = {
-            customType: [{ id: '1' }],
+            customType: [{ id: '1' }, { id: '3' }],
         };
 
-        const referenceFirst = { id: '1', resourceType: 'customType' };
-        const referenceSecond = { id: '2', resourceType: 'customType' };
+        test('returns resource when it exists', () => {
+            const reference = { id: '1', resourceType: 'customType' };
 
-        expect(getIncludedResource(resources, referenceFirst)).toBeTruthy();
-        expect(getIncludedResource(resources, referenceSecond)).toBeFalsy();
+            expect(getIncludedResource(resources, reference)).toEqual({ id: '1' });
+        });
+
+        test('returns resource when it exists', () => {
+            const reference = { id: '2', resourceType: 'customType' };
+
+            expect(getIncludedResource(resources, reference)).toBeUndefined();
+        });
+
+        test("don't returns resource when it exists", () => {
+            const reference = { id: '3', resourceType: 'unknownType' };
+
+            expect(getIncludedResource(resources, reference)).toBeUndefined();
+        });
     });
 
     describe('method `getIncludedResources`', () => {
@@ -746,5 +784,97 @@ describe.only('Service `fhir`', () => {
             },
         });
         expect(result).toEqual(success('data'));
+    });
+
+    describe('Method `transformToBundleEntry`', () => {
+        test('returns null when config is empty', () => {
+            const config = {};
+            expect(transformToBundleEntry(config)).toBeNull();
+        });
+
+        test('process params', () => {
+            const config = {
+                url: '/',
+                method: 'GET',
+                params: { a: 42 },
+            };
+
+            expect(transformToBundleEntry(config as any)).toEqual({
+                request: {
+                    url: '/?a=42',
+                    method: 'GET',
+                },
+            });
+        });
+
+        test('process data', () => {
+            const config = {
+                url: '/',
+                method: 'POST',
+                data: { a: 42 },
+            };
+
+            expect(transformToBundleEntry(config as any)).toEqual({
+                resource: {
+                    a: 42,
+                },
+                request: {
+                    url: '/',
+                    method: 'POST',
+                },
+            });
+        });
+
+        test('process `If-None-Exist` header', () => {
+            const config = {
+                url: '/',
+                method: 'POST',
+                data: {
+                    resourceType: 'Patient',
+                    id: '42',
+                },
+                headers: {
+                    'If-None-Exist': { a: '42' },
+                },
+            };
+
+            expect(transformToBundleEntry(config as any)).toEqual({
+                resource: {
+                    resourceType: 'Patient',
+                    id: '42',
+                },
+                request: {
+                    url: '/',
+                    method: 'POST',
+                    ifNoneExist: 'a=42',
+                },
+            });
+        });
+
+        test('process `If-Match` header', () => {
+            const config = {
+                url: '/',
+                method: 'POST',
+                data: {
+                    resourceType: 'Patient',
+                    id: '42',
+                },
+                headers: {
+                    'If-Match': '41',
+                },
+            };
+
+            expect(transformToBundleEntry(config as any)).toEqual({
+                resource: {
+                    resourceType: 'Patient',
+                    id: '42',
+                },
+                request: {
+                    url: '/',
+                    method: 'POST',
+                    ifMatch: '41',
+                },
+            });
+        });
     });
 });
