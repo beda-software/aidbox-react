@@ -391,7 +391,7 @@ export async function applyFHIRService<T, F>(request: AxiosRequestConfig): Promi
 
 const toCamelCase = (str: string): string => {
     const withFirstLowerLetter = str.charAt(0).toLowerCase() + str.slice(1);
-    return withFirstLowerLetter.replace('-', '');
+    return withFirstLowerLetter.replace(/-/gi, '');
 };
 
 export function transformToBundleEntry<R extends AidboxResource>(config: AxiosRequestConfig): BundleEntry<R> | null {
