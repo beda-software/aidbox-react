@@ -110,7 +110,7 @@ export async function updateFHIRResource<R extends AidboxResource>(
 
 export function update(resource: AidboxResource, searchParams?: SearchParams): AxiosRequestConfig {
     if (searchParams) {
-        return { method: 'PUT', url: `/${resource.resourceType}`, params: searchParams };
+        return { method: 'PUT', url: `/${resource.resourceType}`, data: resource, params: searchParams };
     }
 
     if (resource.id) {
@@ -119,6 +119,7 @@ export function update(resource: AidboxResource, searchParams?: SearchParams): A
         return {
             method: 'PUT',
             url: `/${resource.resourceType}/${resource.id}`,
+            data: resource,
             ...(versionId ? { headers: { 'If-Match': versionId } } : {}),
         };
     }
@@ -206,7 +207,7 @@ export function save<R extends AidboxResource>(resource: R): AxiosRequestConfig 
         method: resource.id ? 'PUT' : 'POST',
         data: resource,
         url: `/${resource.resourceType}${resource.id ? '/' + resource.id : ''}`,
-        params: resource.id && versionId ? versionId : undefined,
+        ...(resource.id && versionId ? { headers: { 'If-Match': versionId } } : {}),
     };
 }
 
@@ -243,20 +244,31 @@ export async function patchFHIRResource<R extends AidboxResource>(
 }
 
 export function patch<R extends AidboxResource>(
-    resource: Partial<R> & Required<Pick<R, 'id' | 'resourceType'>>,
+    resource: Partial<R> & Required<Pick<R, 'resourceType'>>,
     searchParams?: SearchParams
 ): AxiosRequestConfig {
-    return {
-        method: 'PATCH',
-        data: resource,
-        url: `/${resource.resourceType}/${resource.id}`,
-        ...(searchParams ? { params: searchParams } : {}),
-    };
+    if (searchParams) {
+        return {
+            method: 'PATCH',
+            url: `/${resource.resourceType}`,
+            data: resource,
+            params: searchParams,
+        };
+    }
+
+    if (resource.id) {
+        return {
+            method: 'PATCH',
+            url: `/${resource.resourceType}/${resource.id}`,
+            data: resource,
+        };
+    }
+
+    throw new Error('Resourse id and search parameters are not specified');
 }
 
 export async function deleteFHIRResource<R extends AidboxResource>(
-    resource: AidboxReference<R>,
-    searchParams?: SearchParams
+    resource: AidboxReference<R>
 ): Promise<RemoteDataResult<R>> {
     const inactiveMappingItem = inactiveMapping[resource.resourceType];
 
@@ -266,13 +278,10 @@ export async function deleteFHIRResource<R extends AidboxResource>(
         return failure({});
     }
 
-    return service(markAsDeleted(resource, searchParams));
+    return service(markAsDeleted(resource));
 }
 
-export function markAsDeleted<R extends AidboxResource>(
-    resource: AidboxReference<R>,
-    searchParams?: SearchParams
-): AxiosRequestConfig {
+export function markAsDeleted<R extends AidboxResource>(resource: AidboxReference<R>): AxiosRequestConfig {
     const inactiveMappingItem = inactiveMapping[resource.resourceType];
 
     if (!inactiveMappingItem) {
@@ -286,7 +295,6 @@ export function markAsDeleted<R extends AidboxResource>(
         data: {
             [inactiveMappingItem.statusField]: inactiveMappingItem.value,
         },
-        ...(searchParams ? { params: searchParams } : {}),
     };
 }
 

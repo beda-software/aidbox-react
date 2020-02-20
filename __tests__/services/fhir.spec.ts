@@ -171,6 +171,7 @@ describe.only('Service `fhir`', () => {
             expect(update(resource)).toEqual({
                 method: 'PUT',
                 url: `/${resource.resourceType}/${resource.id}`,
+                data: resource,
                 headers: {
                     'If-Match': resource.meta.versionId,
                 },
@@ -185,6 +186,7 @@ describe.only('Service `fhir`', () => {
             expect(update(resource)).toEqual({
                 method: 'PUT',
                 url: `/${resource.resourceType}/${resource.id}`,
+                data: resource,
             });
         });
 
@@ -207,6 +209,7 @@ describe.only('Service `fhir`', () => {
             expect(update(resource, searchParams)).toEqual({
                 method: 'PUT',
                 url: `/${resource.resourceType}`,
+                data: resource,
                 params: searchParams,
             });
         });
@@ -421,6 +424,7 @@ describe.only('Service `fhir`', () => {
                 url: `/${resource.resourceType}/${resource.id}`,
             });
         });
+
         test('patch resource with search params', async () => {
             const resource = {
                 id: '1',
@@ -433,9 +437,19 @@ describe.only('Service `fhir`', () => {
             expect(patch(resource, searchParams)).toEqual({
                 method: 'PATCH',
                 data: resource,
-                url: `/${resource.resourceType}/${resource.id}`,
+                url: `/${resource.resourceType}`,
                 params: searchParams,
             });
+        });
+
+        test('patch resource without id', () => {
+            const resource = {
+                resourceType: 'Patient',
+            };
+
+            expect(() => {
+                patch(resource);
+            }).toThrow();
         });
     });
 
@@ -477,24 +491,6 @@ describe.only('Service `fhir`', () => {
                 },
             });
         });
-
-        test('delete resource with params', () => {
-            const resource = {
-                id: '1',
-                resourceType: 'Schedule',
-            };
-            const searchParams = { param: 'value' };
-            const result = markAsDeleted(resource, searchParams);
-
-            expect(result).toEqual({
-                method: 'PATCH',
-                url: `/${resource.resourceType}/${resource.id}`,
-                data: {
-                    active: false,
-                },
-                params: searchParams,
-            });
-        });
     });
 
     describe('method `deleteFHIRResource`', () => {
@@ -522,31 +518,15 @@ describe.only('Service `fhir`', () => {
         });
     });
 
-    describe('method `forceDelete`', () => {
-        test('has correct behavior without `params` argument', async () => {
-            const resource = {
-                id: '1',
-                resourceType: 'Patient',
-            };
+    test('method `forceDelete`', async () => {
+        const resource = {
+            id: '1',
+            resourceType: 'Patient',
+        };
 
-            expect(forceDelete(resource)).toEqual({
-                method: 'DELETE',
-                url: `/${resource.resourceType}/${resource.id}`,
-            });
-        });
-
-        test('has correct behavior with `params` argument', async () => {
-            const resource = {
-                id: '1',
-                resourceType: 'Patient',
-            };
-            const params = { id: 2 };
-
-            expect(forceDelete(resource, params)).toEqual({
-                method: 'DELETE',
-                url: `/${resource.resourceType}/${resource.id}`,
-                params,
-            });
+        expect(forceDelete(resource)).toEqual({
+            method: 'DELETE',
+            url: `/${resource.resourceType}/${resource.id}`,
         });
     });
 
@@ -772,6 +752,10 @@ describe.only('Service `fhir`', () => {
                         request: {
                             method: 'PUT',
                             url: '/Patient/42',
+                        },
+                        resource: {
+                            resourceType: 'Patient',
+                            id: '42',
                         },
                     },
                     {
