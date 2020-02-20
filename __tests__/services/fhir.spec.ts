@@ -518,40 +518,46 @@ describe.only('Service `fhir`', () => {
         });
     });
 
-    test('method `forceDelete`', async () => {
-        const resource = {
-            id: '1',
-            resourceType: 'Patient',
-        };
+    describe('method `forceDelete`', () => {
+        test('delete resource by id', () => {
+            const resourceType = 'Patient';
+            const id = '1';
 
-        expect(forceDelete(resource)).toEqual({
-            method: 'DELETE',
-            url: `/${resource.resourceType}/${resource.id}`,
+            expect(forceDelete(resourceType, id)).toEqual({
+                method: 'DELETE',
+                url: `/${resourceType}/${id}`,
+            });
+        });
+
+        test('delete resource by search params', () => {
+            const resourceType = 'Patient';
+            const searchParams = { id: '1' };
+
+            expect(forceDelete(resourceType, searchParams)).toEqual({
+                method: 'DELETE',
+                url: `/${resourceType}`,
+                params: searchParams,
+            });
         });
     });
 
     describe('method `forceDeleteFHIRResource`', () => {
-        test('has correct behavior without `params` argument', async () => {
-            const resource = {
-                id: '1',
-                resourceType: 'Patient',
-            };
+        test('has correct behavior with `id` argument', async () => {
+            const resourceType = 'Patient';
+            const id = '1';
 
-            await forceDeleteFHIRResource(resource);
+            await forceDeleteFHIRResource(resourceType, id);
 
-            expect(service).toHaveBeenLastCalledWith(forceDelete(resource));
+            expect(service).toHaveBeenLastCalledWith(forceDelete(resourceType, id));
         });
 
         test('has correct behavior with `params` argument', async () => {
-            const resource = {
-                id: '1',
-                resourceType: 'Patient',
-            };
+            const resourceType = 'Patient';
             const params = { id: 2 };
 
-            await forceDeleteFHIRResource(resource, params);
+            await forceDeleteFHIRResource(resourceType, params);
 
-            expect(service).toHaveBeenLastCalledWith(forceDelete(resource, params));
+            expect(service).toHaveBeenLastCalledWith(forceDelete(resourceType, params));
         });
     });
 
@@ -727,10 +733,7 @@ describe.only('Service `fhir`', () => {
                 resourceType: 'Patient',
                 id: '42',
             }),
-            forceDelete({
-                resourceType: 'Patient',
-                id: '42',
-            }),
+            forceDelete('Patient', '42'),
         ]);
 
         expect(service).toHaveBeenLastCalledWith({

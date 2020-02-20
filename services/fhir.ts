@@ -1,5 +1,5 @@
 import { AxiosRequestConfig } from 'axios';
-import { AidboxReference, AidboxResource, ValueSet, Bundle, BundleEntry } from 'src/contrib/aidbox';
+import { AidboxReference, AidboxResource, ValueSet, Bundle, BundleEntry, id } from 'src/contrib/aidbox';
 
 import { failure, RemoteDataResult } from '../libs/remoteData';
 import { SearchParams } from './search';
@@ -299,20 +299,27 @@ export function markAsDeleted<R extends AidboxResource>(resource: AidboxReferenc
 }
 
 export async function forceDeleteFHIRResource<R extends AidboxResource>(
-    resource: AidboxReference<R>,
-    searchParams?: SearchParams
+    resourceType: string,
+    idOrSearchParams: id | SearchParams
 ): Promise<RemoteDataResult<R>> {
-    return service(forceDelete(resource, searchParams));
+    return service(forceDelete(resourceType, idOrSearchParams));
 }
 
 export function forceDelete<R extends AidboxResource>(
-    resource: AidboxReference<R>,
-    searchParams?: SearchParams
+    resourceType: string,
+    idOrSearchParams: id | SearchParams
 ): AxiosRequestConfig {
+    if (isObject(idOrSearchParams)) {
+        return {
+            method: 'DELETE',
+            url: `/${resourceType}`,
+            params: idOrSearchParams,
+        };
+    }
+
     return {
         method: 'DELETE',
-        url: `/${resource.resourceType}/${resource.id}`,
-        ...(searchParams ? { params: searchParams } : {}),
+        url: `/${resourceType}/${idOrSearchParams}`,
     };
 }
 
