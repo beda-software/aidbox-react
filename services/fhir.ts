@@ -265,12 +265,6 @@ export function patch<R extends AidboxResource>(
 export async function deleteFHIRResource<R extends AidboxResource>(
     resource: AidboxReference<R>
 ): Promise<RemoteDataResult<R>> {
-    const inactiveMappingItem = inactiveMapping[resource.resourceType];
-
-    if (!inactiveMappingItem) {
-        throw new Error(`Specify inactiveMapping for ${resource.resourceType} to mark item deleted`);
-    }
-
     return service(markAsDeleted(resource));
 }
 
