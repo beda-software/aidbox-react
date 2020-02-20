@@ -1,11 +1,22 @@
 import {
+    create,
+    createFHIRResource,
+    get,
     getFHIRResource,
+    list,
     getFHIRResources,
+    find,
     findFHIRResource,
+    update,
+    updateFHIRResource,
+    save,
     saveFHIRResource,
     saveFHIRResources,
+    patch,
     patchFHIRResource,
+    forceDelete,
     forceDeleteFHIRResource,
+    markAsDeleted,
     deleteFHIRResource,
     getReference,
     makeReference,
@@ -14,19 +25,75 @@ import {
     getIncludedResource,
     getIncludedResources,
     getConcepts,
+    applyFHIRService,
+    applyFHIRServices,
+    transformToBundleEntry,
 } from '../../services/fhir';
-
 import { service } from '../../services/service';
-import { success, failure } from '../../libs/remoteData';
+import { success } from '../../libs/remoteData';
 import { Bundle, AidboxResource } from 'src/contrib/aidbox';
+import { AxiosTransformer } from 'axios';
 
 jest.mock('../../services/service', () => {
     return { service: jest.fn(() => Promise.resolve(success('data'))) };
 });
 
-describe('Service `fhir`', () => {
+describe.only('Service `fhir`', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+    });
+
+    describe('method `create`', () => {
+        test('create resource without search parameters`', async () => {
+            const resource = {
+                resourceType: 'Patient',
+            };
+
+            expect(create(resource)).toEqual({
+                method: 'POST',
+                url: `/${resource.resourceType}`,
+                data: resource,
+            });
+        });
+
+        test('create resource with search parameters`', () => {
+            const resource = {
+                resourceType: 'Patient',
+            };
+            const searchParams = {
+                param: 'value',
+            };
+
+            expect(create(resource, searchParams)).toEqual({
+                method: 'POST',
+                url: `/${resource.resourceType}`,
+                params: searchParams,
+                data: resource,
+            });
+        });
+    });
+
+    test('method `createFHIRResource`', async () => {
+        const resource = {
+            id: '1',
+            resourceType: 'Patient',
+        };
+
+        await createFHIRResource(resource);
+
+        expect(service).toHaveBeenLastCalledWith(create(resource));
+    });
+
+    describe('method `get`', () => {
+        const resource = {
+            id: '1',
+            resourceType: 'Patient',
+        };
+
+        expect(get(resource)).toEqual({
+            method: 'GET',
+            url: '/' + resource.resourceType + '/' + resource.id,
+        });
     });
 
     test('method `getFHIRResource`', async () => {
@@ -37,50 +104,194 @@ describe('Service `fhir`', () => {
 
         await getFHIRResource(reference);
 
-        expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
-            method: 'GET',
-            url: '/' + reference.resourceType + '/' + reference.id,
-        });
+        expect(service).toHaveBeenLastCalledWith(get(reference));
     });
 
-    test('method `getFHIRResources`', async () => {
+    describe('method `list`', () => {
         const params = { id: 2 };
 
-        await getFHIRResources('user', params);
-
-        expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
-            method: 'GET',
-            url: '/user',
-            params,
+        test('create axios config without extra path', () => {
+            expect(list('user', params)).toEqual({
+                method: 'GET',
+                url: '/user',
+                params,
+            });
         });
 
-        await getFHIRResources('user', params, 'extra');
-
-        expect((<jest.Mock>service).mock.calls[1][0]).toEqual({
-            method: 'GET',
-            url: '/user/extra',
-            params,
+        test('create axios config with extra path', () => {
+            expect(list('user', params, 'extra')).toEqual({
+                method: 'GET',
+                url: '/user/extra',
+                params,
+            });
         });
     });
 
-    test('method `saveFHIRResource` 1', async () => {
-        const resourceWithId = { id: '1', resourceType: 'Patient' };
-        const resourceWithoutId = { resourceType: 'Patient' };
+    describe('method `getFHIRResources`', () => {
+        const params = { id: 2 };
 
-        saveFHIRResource(resourceWithId);
+        test('get resource without extra path', async () => {
+            await getFHIRResources('user', params);
 
-        expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
-            method: 'PUT',
-            url: '/Patient/1',
-            data: resourceWithId,
+            expect(service).toHaveBeenLastCalledWith(list('user', params));
         });
 
-        await saveFHIRResource(resourceWithoutId);
+        test('get resource with extra path', async () => {
+            await getFHIRResources('user', params, 'extra');
 
-        expect((<jest.Mock>service).mock.calls[1][0]).toEqual({
-            method: 'POST',
-            url: '/Patient',
-            data: resourceWithoutId,
+            expect(service).toHaveBeenLastCalledWith(list('user', params, 'extra'));
+        });
+    });
+
+    describe('method `update`', () => {
+        test('update resource with meta versionId', () => {
+            const resource = {
+                resourceType: 'Patient',
+                id: '1',
+                meta: {
+                    versionId: '1',
+                },
+            };
+
+            expect(update(resource)).toEqual({
+                method: 'PUT',
+                url: `/${resource.resourceType}/${resource.id}`,
+                data: resource,
+                headers: {
+                    'If-Match': resource.meta.versionId,
+                },
+            });
+        });
+        test('update resource without meta versionId', () => {
+            const resource = {
+                resourceType: 'Patient',
+                id: '1',
+            };
+
+            expect(update(resource)).toEqual({
+                method: 'PUT',
+                url: `/${resource.resourceType}/${resource.id}`,
+                data: resource,
+            });
+        });
+
+        test('update resource without id', () => {
+            const resource = {
+                resourceType: 'Patient',
+            };
+
+            expect(() => {
+                update(resource);
+            }).toThrow();
+        });
+
+        test('update resource without id with search params', () => {
+            const resource = {
+                resourceType: 'Patient',
+            };
+            const searchParams = { param: 'value' };
+
+            expect(update(resource, searchParams)).toEqual({
+                method: 'PUT',
+                url: `/${resource.resourceType}`,
+                data: resource,
+                params: searchParams,
+            });
+        });
+    });
+
+    test('method `updateFHIRResource`', async () => {
+        const resource = {
+            resourceType: 'Patient',
+            id: '1',
+        };
+        const searchParams = { param: 'value' };
+
+        await updateFHIRResource(resource, searchParams);
+
+        expect(service).toHaveBeenLastCalledWith(update(resource, searchParams));
+    });
+
+    describe('method `save`', () => {
+        test('save resource without id', () => {
+            const resource = {
+                resourceType: 'Patient',
+            };
+
+            expect(save(resource)).toEqual({
+                method: 'POST',
+                url: '/Patient',
+                data: resource,
+            });
+        });
+
+        test('save resource with id', () => {
+            const resource = {
+                resourceType: 'Patient',
+                id: '1',
+            };
+
+            expect(save(resource)).toEqual({
+                method: 'PUT',
+                url: '/Patient/1',
+                data: resource,
+            });
+        });
+
+        test('save resource with meta versionId', () => {
+            const resource = {
+                resourceType: 'Patient',
+                id: '1',
+                meta: {
+                    versionId: '1',
+                },
+            };
+
+            expect(update(resource)).toEqual({
+                method: 'PUT',
+                url: `/${resource.resourceType}/${resource.id}`,
+                data: resource,
+                headers: {
+                    'If-Match': resource.meta.versionId,
+                },
+            });
+        });
+    });
+
+    describe('method `saveFHIRResource`', () => {
+        test('save resource without id', async () => {
+            const resource = {
+                resourceType: 'Patient',
+            };
+
+            await saveFHIRResource(resource);
+
+            expect(service).toHaveBeenLastCalledWith(save(resource));
+        });
+
+        test('save resource with id', async () => {
+            const resource = {
+                resourceType: 'Patient',
+                id: '1',
+            };
+
+            await saveFHIRResource(resource);
+
+            expect(service).toHaveBeenLastCalledWith(save(resource));
+        });
+
+        test('save resource with meta versionId', async () => {
+            const resource = {
+                resourceType: 'Patient',
+                id: '1',
+                meta: {
+                    versionId: '1',
+                },
+            };
+
+            await saveFHIRResource(resource);
+
+            expect(service).toHaveBeenLastCalledWith(save(resource));
         });
     });
 
@@ -89,12 +300,13 @@ describe('Service `fhir`', () => {
         const resources = [
             { id: '1', resourceType: 'Patient' },
             { id: '2', resourceType: 'Patient' },
+            { id: '3', resourceType: 'Patient', meta: { versionId: '1' } },
             { resourceType: 'Patient' },
         ];
 
         await saveFHIRResources(resources, bundleType);
 
-        expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
+        expect(service).toHaveBeenLastCalledWith({
             method: 'POST',
             url: '/',
             data: {
@@ -122,6 +334,20 @@ describe('Service `fhir`', () => {
                     },
                     {
                         request: {
+                            method: 'PUT',
+                            url: '/Patient/3',
+                            ifMatch: '1',
+                        },
+                        resource: {
+                            id: '3',
+                            resourceType: 'Patient',
+                            meta: {
+                                versionId: '1',
+                            },
+                        },
+                    },
+                    {
+                        request: {
                             method: 'POST',
                             url: '/Patient',
                         },
@@ -134,16 +360,15 @@ describe('Service `fhir`', () => {
         });
     });
 
-    describe('method `findFHIRResource`', () => {
+    describe('method `find`', () => {
         test('has correct behavior', async () => {
             const params = { id: 1 };
             const resourceType = 'Patient';
 
-            await findFHIRResource(resourceType, params);
+            const axiosRequestConfig = find(resourceType, params);
+            const transformResponse = axiosRequestConfig.transformResponse as AxiosTransformer;
 
-            const config = (<jest.Mock>service).mock.calls[0][0];
-
-            expect(config).toEqual(
+            expect(axiosRequestConfig).toEqual(
                 expect.objectContaining({
                     method: 'GET',
                     url: '/' + resourceType,
@@ -156,22 +381,22 @@ describe('Service `fhir`', () => {
 
             expect(() => {
                 const response = '';
-                config.transformResponse(response);
+                transformResponse(response);
             }).toThrow();
 
             expect(() => {
                 const response = '{"entry":[]}';
-                config.transformResponse(response);
+                transformResponse(response);
             }).toThrow();
 
             const response = '{"entry":[{"resource": "data"}]}';
-            const transformed = config.transformResponse(response);
+            const transformed = transformResponse(response);
 
             expect(transformed).toBe('data');
 
             expect(() => {
                 const response = '{"entry":[{"resource": "a"}, {"resource": "b"}]}';
-                config.transformResponse(response);
+                transformResponse(response);
             }).toThrow();
         });
 
@@ -180,11 +405,7 @@ describe('Service `fhir`', () => {
             const resourceType = 'Patient';
             const extraPath = 'extraPath';
 
-            await findFHIRResource(resourceType, params, extraPath);
-
-            const config = (<jest.Mock>service).mock.calls[0][0];
-
-            expect(config).toEqual(
+            expect(find(resourceType, params, extraPath)).toEqual(
                 expect.objectContaining({
                     method: 'GET',
                     url: '/' + resourceType + '/' + extraPath,
@@ -197,6 +418,74 @@ describe('Service `fhir`', () => {
         });
     });
 
+    describe('method `findFHIRResource`', () => {
+        test('has correct behavior', async () => {
+            const params = { id: 1 };
+            const resourceType = 'Patient';
+
+            await findFHIRResource(resourceType, params);
+            const { transformResponse, ...restFindResult } = find(resourceType, params);
+
+            expect(service).toHaveBeenLastCalledWith(expect.objectContaining(restFindResult));
+        });
+
+        test('receive extra path argument', async () => {
+            const params = { id: 1 };
+            const resourceType = 'Patient';
+            const extraPath = 'extraPath';
+
+            await findFHIRResource(resourceType, params, extraPath);
+
+            const { transformResponse, ...restFindResult } = find(resourceType, params, extraPath);
+
+            expect(service).toHaveBeenLastCalledWith(expect.objectContaining(restFindResult));
+        });
+    });
+
+    describe('method `patch`', () => {
+        test('patch resource without search params', async () => {
+            const resource = {
+                id: '1',
+                resourceType: 'Patient',
+            };
+
+            await patchFHIRResource(resource);
+
+            expect(patch(resource)).toEqual({
+                method: 'PATCH',
+                data: resource,
+                url: `/${resource.resourceType}/${resource.id}`,
+            });
+        });
+
+        test('patch resource with search params', async () => {
+            const resource = {
+                id: '1',
+                resourceType: 'Patient',
+            };
+            const searchParams = { param: 'value' };
+
+            await patchFHIRResource(resource);
+
+            expect(patch(resource, searchParams)).toEqual({
+                method: 'PATCH',
+                data: resource,
+                url: `/${resource.resourceType}`,
+                params: searchParams,
+            });
+        });
+
+        test('patch resource without id', () => {
+            const resource = {
+                resourceType: 'Patient',
+            };
+
+            expect(() => {
+                patch(resource);
+            }).toThrow();
+        });
+    });
+
     test('method `patchFHIRResource`', async () => {
         const resource = {
             id: '1',
@@ -205,68 +494,89 @@ describe('Service `fhir`', () => {
 
         await patchFHIRResource(resource);
 
-        expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
-            method: 'PATCH',
-            data: resource,
-            url: `/${resource.resourceType}/${resource.id}`,
+        expect(service).toHaveBeenLastCalledWith(patch(resource));
+    });
+
+    describe('method `markAsDeleted`', () => {
+        test('delete unknown resource', () => {
+            const resource = {
+                id: '1',
+                resourceType: 'Unknown',
+            };
+            expect(() => {
+                markAsDeleted(resource);
+            }).toThrow();
+        });
+
+        test('delete location resource', () => {
+            const resource = {
+                id: '1',
+                resourceType: 'Location',
+            };
+
+            expect(markAsDeleted(resource)).toEqual({
+                method: 'PATCH',
+                url: `/${resource.resourceType}/${resource.id}`,
+                data: {
+                    status: 'inactive',
+                },
+            });
         });
     });
 
-    test('method `deleteFHIRResource`', async () => {
-        const result = await deleteFHIRResource({
-            id: '1',
-            resourceType: 'Unknown',
+    describe('method `deleteFHIRResource`', () => {
+        test('delete unknown resource', async () => {
+            const resource = {
+                id: '1',
+                resourceType: 'Unknown',
+            };
+            expect(deleteFHIRResource(resource)).rejects.toThrow();
         });
 
-        expect(result).toEqual(failure({}));
+        test('delete location resource', async () => {
+            const resource = {
+                id: '1',
+                resourceType: 'Location',
+            };
 
+            await deleteFHIRResource(resource);
+
+            expect(service).toHaveBeenLastCalledWith(markAsDeleted(resource));
+        });
+    });
+
+    describe('method `forceDelete`', () => {
+        test('delete resource by id', () => {
+            const resourceType = 'Patient';
+            const id = '1';
+
+            expect(forceDelete(resourceType, id)).toEqual({
+                method: 'DELETE',
+                url: `/${resourceType}/${id}`,
+            });
+        });
+
+        test('delete resource by search params', () => {
+            const resourceType = 'Patient';
+            const searchParams = { id: '1' };
+
+            expect(forceDelete(resourceType, searchParams)).toEqual({
+                method: 'DELETE',
+                url: `/${resourceType}`,
+                params: searchParams,
+            });
+        });
+    });
+
+    test('method `forceDeleteFHIRResource`', async () => {
         const resource = {
+            resourceType: 'Patient',
             id: '1',
-            resourceType: 'Location',
         };
 
-        await deleteFHIRResource(resource);
+        await forceDeleteFHIRResource(resource);
 
-        expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
-            method: 'PATCH',
-            url: `/${resource.resourceType}/${resource.id}`,
-            data: {
-                status: 'inactive',
-            },
-        });
-    });
-
-    describe('method `forceDeleteFHIRResource`', () => {
-        test('has correct behavior without `params` argument', async () => {
-            const resource = {
-                id: '1',
-                resourceType: 'Patient',
-            };
-
-            await forceDeleteFHIRResource(resource);
-
-            expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
-                method: 'DELETE',
-                url: `/${resource.resourceType}/${resource.id}`,
-                params: {},
-            });
-        });
-
-        test('has correct behavior with `params` argument', async () => {
-            const resource = {
-                id: '1',
-                resourceType: 'Patient',
-            };
-            const params = { id: 2 };
-
-            await forceDeleteFHIRResource(resource, params);
-
-            expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
-                method: 'DELETE',
-                url: `/${resource.resourceType}/${resource.id}`,
-                params,
-            });
-        });
+        expect(service).toHaveBeenLastCalledWith(forceDelete(resource.resourceType, resource.id));
     });
 
     test('method `getReference`', () => {
@@ -312,57 +622,76 @@ describe('Service `fhir`', () => {
         expect(isReference({} as any)).toBeTruthy();
     });
 
-    test('method `extractBundleResources`', () => {
-        const bundle = {
-            resourceType: 'Bundle',
-            entry: [
-                {
-                    resource: {
-                        id: '1',
-                        resourceType: 'Patient',
-                    },
-                },
-                {
-                    resource: {
-                        id: '2',
-                        resourceType: 'Patient',
-                    },
-                },
-                {
-                    resource: {
-                        id: '3',
-                        resourceType: 'Patient',
-                    },
-                },
-                {
-                    resource: {
-                        id: '4',
-                        resourceType: 'customType',
-                    },
-                },
-            ],
-        } as Bundle<AidboxResource>;
+    describe('method `extractBundleResources`', () => {
+        test("extact empty object when there's not entry property", () => {
+            const bundle = {} as Bundle<AidboxResource>;
 
-        expect(extractBundleResources(bundle)).toEqual({
-            Patient: [
-                { id: '1', resourceType: 'Patient' },
-                { id: '2', resourceType: 'Patient' },
-                { id: '3', resourceType: 'Patient' },
-            ],
-            customType: [{ id: '4', resourceType: 'customType' }],
+            expect(extractBundleResources(bundle)).toEqual({});
+        });
+        test("extract bundle there's entry field property", () => {
+            const bundle = {
+                resourceType: 'Bundle',
+                entry: [
+                    {
+                        resource: {
+                            id: '1',
+                            resourceType: 'Patient',
+                        },
+                    },
+                    {
+                        resource: {
+                            id: '2',
+                            resourceType: 'Patient',
+                        },
+                    },
+                    {
+                        resource: {
+                            id: '3',
+                            resourceType: 'Patient',
+                        },
+                    },
+                    {
+                        resource: {
+                            id: '4',
+                            resourceType: 'customType',
+                        },
+                    },
+                ],
+            } as Bundle<AidboxResource>;
+
+            expect(extractBundleResources(bundle)).toEqual({
+                Patient: [
+                    { id: '1', resourceType: 'Patient' },
+                    { id: '2', resourceType: 'Patient' },
+                    { id: '3', resourceType: 'Patient' },
+                ],
+                customType: [{ id: '4', resourceType: 'customType' }],
+            });
         });
     });
 
-    test('method `getIncludedResource`', () => {
+    describe('method `getIncludedResource`', () => {
         const resources = {
-            customType: [{ id: '1' }],
+            customType: [{ id: '1' }, { id: '3' }],
         };
 
-        const referenceFirst = { id: '1', resourceType: 'customType' };
-        const referenceSecond = { id: '2', resourceType: 'customType' };
+        test('returns resource when it exists', () => {
+            const reference = { id: '1', resourceType: 'customType' };
 
-        expect(getIncludedResource(resources, referenceFirst)).toBeTruthy();
-        expect(getIncludedResource(resources, referenceSecond)).toBeFalsy();
+            expect(getIncludedResource(resources, reference)).toEqual({ id: '1' });
+        });
+
+        test('returns resource when it exists', () => {
+            const reference = { id: '2', resourceType: 'customType' };
+
+            expect(getIncludedResource(resources, reference)).toBeUndefined();
+        });
+
+        test("don't returns resource when it exists", () => {
+            const reference = { id: '3', resourceType: 'unknownType' };
+
+            expect(getIncludedResource(resources, reference)).toBeUndefined();
+        });
     });
 
     describe('method `getIncludedResources`', () => {
@@ -396,10 +725,184 @@ describe('Service `fhir`', () => {
 
         await getConcepts(valueSetId, params);
 
-        expect((<jest.Mock>service).mock.calls[0][0]).toEqual({
+        expect(service).toHaveBeenLastCalledWith({
             method: 'GET',
             url: `/ValueSet/${valueSetId}/$expand`,
             params,
+        });
+    });
+
+    test('method `applyFHIRService`', async () => {
+        const resource = {
+            resourceType: 'Patient',
+        };
+
+        const result = await applyFHIRService(create(resource));
+
+        expect(result).toEqual(success('data'));
+    });
+
+    describe('method `applyFHIRServices`', () => {
+        test('apply transaction', async () => {
+            const result = await applyFHIRServices([
+                create({
+                    resourceType: 'Patient',
+                }),
+                update({
+                    resourceType: 'Patient',
+                    id: '42',
+                }),
+                forceDelete('Patient', '42'),
+            ]);
+
+            expect(service).toHaveBeenLastCalledWith({
+                url: '/',
+                method: 'POST',
+                data: {
+                    type: 'transaction',
+                    entry: [
+                        {
+                            request: {
+                                method: 'POST',
+                                url: '/Patient',
+                            },
+                            resource: {
+                                resourceType: 'Patient',
+                            },
+                        },
+                        {
+                            request: {
+                                method: 'PUT',
+                                url: '/Patient/42',
+                            },
+                            resource: {
+                                resourceType: 'Patient',
+                                id: '42',
+                            },
+                        },
+                        {
+                            request: {
+                                method: 'DELETE',
+                                url: '/Patient/42',
+                            },
+                        },
+                    ],
+                },
+            });
+            expect(result).toEqual(success('data'));
+        });
+
+        test('apply batch', async () => {
+            const result = await applyFHIRServices([forceDelete('Patient', '42')], 'batch');
+
+            expect(service).toHaveBeenLastCalledWith({
+                url: '/',
+                method: 'POST',
+                data: {
+                    type: 'batch',
+                    entry: [
+                        {
+                            request: {
+                                method: 'DELETE',
+                                url: '/Patient/42',
+                            },
+                        },
+                    ],
+                },
+            });
+            expect(result).toEqual(success('data'));
+        });
+    });
+
+    describe('Method `transformToBundleEntry`', () => {
+        test('returns null when config is empty', () => {
+            const config = {};
+            expect(transformToBundleEntry(config)).toBeNull();
+        });
+
+        test('process params', () => {
+            const config = {
+                url: '/',
+                method: 'GET',
+                params: { a: 42 },
+            };
+
+            expect(transformToBundleEntry(config as any)).toEqual({
+                request: {
+                    url: '/?a=42',
+                    method: 'GET',
+                },
+            });
+        });
+
+        test('process data', () => {
+            const config = {
+                url: '/',
+                method: 'POST',
+                data: { a: 42 },
+            };
+
+            expect(transformToBundleEntry(config as any)).toEqual({
+                resource: {
+                    a: 42,
+                },
+                request: {
+                    url: '/',
+                    method: 'POST',
+                },
+            });
+        });
+
+        test('process `If-None-Exist` header', () => {
+            const config = {
+                url: '/',
+                method: 'POST',
+                data: {
+                    resourceType: 'Patient',
+                    id: '42',
+                },
+                headers: {
+                    'If-None-Exist': { a: '42' },
+                },
+            };
+
+            expect(transformToBundleEntry(config as any)).toEqual({
+                resource: {
+                    resourceType: 'Patient',
+                    id: '42',
+                },
+                request: {
+                    url: '/',
+                    method: 'POST',
+                    ifNoneExist: 'a=42',
+                },
+            });
+        });
+
+        test('process `If-Match` header', () => {
+            const config = {
+                url: '/',
+                method: 'POST',
+                data: {
+                    resourceType: 'Patient',
+                    id: '42',
+                },
+                headers: {
+                    'If-Match': '41',
+                },
+            };
+
+            expect(transformToBundleEntry(config as any)).toEqual({
+                resource: {
+                    resourceType: 'Patient',
+                    id: '42',
+                },
+                request: {
+                    url: '/',
+                    method: 'POST',
+                    ifMatch: '41',
+                },
+            });
         });
     });
 });
