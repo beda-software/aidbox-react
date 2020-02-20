@@ -285,10 +285,9 @@ export function markAsDeleted<R extends AidboxResource>(resource: AidboxReferenc
 }
 
 export async function forceDeleteFHIRResource<R extends AidboxResource>(
-    resourceType: string,
-    idOrSearchParams: id | SearchParams
+    resource: AidboxReference<R>
 ): Promise<RemoteDataResult<R>> {
-    return service(forceDelete(resourceType, idOrSearchParams));
+    return service(forceDelete(resource.resourceType, resource.id));
 }
 
 export function forceDelete<R extends AidboxResource>(

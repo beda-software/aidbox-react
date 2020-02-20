@@ -568,24 +568,15 @@ describe.only('Service `fhir`', () => {
         });
     });
 
-    describe('method `forceDeleteFHIRResource`', () => {
-        test('has correct behavior with `id` argument', async () => {
-            const resourceType = 'Patient';
-            const id = '1';
+    test('method `forceDeleteFHIRResource`', async () => {
+        const resource = {
+            resourceType: 'Patient',
+            id: '1',
+        };
 
-            await forceDeleteFHIRResource(resourceType, id);
+        await forceDeleteFHIRResource(resource);
 
-            expect(service).toHaveBeenLastCalledWith(forceDelete(resourceType, id));
-        });
-
-        test('has correct behavior with `params` argument', async () => {
-            const resourceType = 'Patient';
-            const params = { id: 2 };
-
-            await forceDeleteFHIRResource(resourceType, params);
-
-            expect(service).toHaveBeenLastCalledWith(forceDelete(resourceType, params));
-        });
+        expect(service).toHaveBeenLastCalledWith(forceDelete(resource.resourceType, resource.id));
     });
 
     test('method `getReference`', () => {
