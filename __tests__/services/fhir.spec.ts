@@ -85,29 +85,14 @@ describe.only('Service `fhir`', () => {
     });
 
     describe('method `get`', () => {
-        test('get resource without search params', () => {
-            const resource = {
-                id: '1',
-                resourceType: 'Patient',
-            };
+        const resource = {
+            id: '1',
+            resourceType: 'Patient',
+        };
 
-            expect(get(resource)).toEqual({
-                method: 'GET',
-                url: '/' + resource.resourceType + '/' + resource.id,
-            });
-        });
-        test('get resource with search params', () => {
-            const resource = {
-                id: '1',
-                resourceType: 'Patient',
-            };
-            const searchParams = { param: 'value' };
-
-            expect(get(resource, searchParams)).toEqual({
-                method: 'GET',
-                url: '/' + resource.resourceType + '/' + resource.id,
-                params: searchParams,
-            });
+        expect(get(resource)).toEqual({
+            method: 'GET',
+            url: '/' + resource.resourceType + '/' + resource.id,
         });
     });
 

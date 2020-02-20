@@ -128,20 +128,15 @@ export function update(resource: AidboxResource, searchParams?: SearchParams): A
 }
 
 export async function getFHIRResource<R extends AidboxResource>(
-    reference: AidboxReference<R>,
-    searchParams?: SearchParams
+    reference: AidboxReference<R>
 ): Promise<RemoteDataResult<R>> {
-    return service(get(reference, searchParams));
+    return service(get(reference));
 }
 
-export function get<R extends AidboxResource>(
-    reference: AidboxReference<R>,
-    searchParams?: SearchParams
-): AxiosRequestConfig {
+export function get<R extends AidboxResource>(reference: AidboxReference<R>): AxiosRequestConfig {
     return {
         method: 'GET',
         url: `/${reference.resourceType}/${reference.id}`,
-        ...(searchParams ? { params: searchParams } : {}),
     };
 }
 
