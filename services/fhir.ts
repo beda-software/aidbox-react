@@ -1,7 +1,7 @@
 import { AxiosRequestConfig } from 'axios';
 import { AidboxReference, AidboxResource, ValueSet, Bundle, BundleEntry, id } from 'src/contrib/aidbox';
 
-import { failure, RemoteDataResult } from '../libs/remoteData';
+import { RemoteDataResult } from '../libs/remoteData';
 import { SearchParams } from './search';
 import { service } from './service';
 import { buildQueryParams } from './instance';
@@ -268,9 +268,7 @@ export async function deleteFHIRResource<R extends AidboxResource>(
     const inactiveMappingItem = inactiveMapping[resource.resourceType];
 
     if (!inactiveMappingItem) {
-        console.error(`Please specify inactiveMapping for ${resource.resourceType} to mark item deleted`);
-
-        return failure({});
+        throw new Error(`Specify inactiveMapping for ${resource.resourceType} to mark item deleted`);
     }
 
     return service(markAsDeleted(resource));
@@ -280,8 +278,7 @@ export function markAsDeleted<R extends AidboxResource>(resource: AidboxReferenc
     const inactiveMappingItem = inactiveMapping[resource.resourceType];
 
     if (!inactiveMappingItem) {
-        console.error(`Please specify inactiveMapping for ${resource.resourceType} to mark item deleted`);
-        return {};
+        throw new Error(`Specify inactiveMapping for ${resource.resourceType} to mark item deleted`);
     }
 
     return {

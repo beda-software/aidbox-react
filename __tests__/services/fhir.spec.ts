@@ -30,7 +30,7 @@ import {
     transformToBundleEntry,
 } from '../../services/fhir';
 import { service } from '../../services/service';
-import { success, failure } from '../../libs/remoteData';
+import { success } from '../../libs/remoteData';
 import { Bundle, AidboxResource } from 'src/contrib/aidbox';
 import { AxiosTransformer } from 'axios';
 
@@ -451,15 +451,13 @@ describe.only('Service `fhir`', () => {
 
     describe('method `markAsDeleted`', () => {
         test('delete unknown resource', () => {
-            const spy = jest.spyOn(console, 'error').mockImplementation();
             const resource = {
                 id: '1',
                 resourceType: 'Unknown',
             };
-            const result = markAsDeleted(resource);
-
-            expect(spy).toBeCalled();
-            expect(result).toEqual({});
+            expect(() => {
+                markAsDeleted(resource);
+            }).toThrow();
         });
 
         test('delete location resource', () => {
@@ -480,15 +478,11 @@ describe.only('Service `fhir`', () => {
 
     describe('method `deleteFHIRResource`', () => {
         test('delete unknown resource', async () => {
-            const spy = jest.spyOn(console, 'error').mockImplementation();
             const resource = {
                 id: '1',
                 resourceType: 'Unknown',
             };
-            const result = await deleteFHIRResource(resource);
-
-            expect(spy).toBeCalled();
-            expect(result).toEqual(failure({}));
+            expect(deleteFHIRResource(resource)).rejects.toThrow();
         });
 
         test('delete location resource', async () => {
