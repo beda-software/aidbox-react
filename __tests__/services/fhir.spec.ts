@@ -237,6 +237,25 @@ describe.only('Service `fhir`', () => {
                 data: resource,
             });
         });
+
+        test('save resource with meta versionId', () => {
+            const resource = {
+                resourceType: 'Patient',
+                id: '1',
+                meta: {
+                    versionId: '1',
+                },
+            };
+
+            expect(update(resource)).toEqual({
+                method: 'PUT',
+                url: `/${resource.resourceType}/${resource.id}`,
+                data: resource,
+                headers: {
+                    'If-Match': resource.meta.versionId,
+                },
+            });
+        });
     });
 
     describe('method `saveFHIRResource`', () => {
@@ -260,6 +279,20 @@ describe.only('Service `fhir`', () => {
 
             expect(service).toHaveBeenLastCalledWith(save(resource));
         });
+
+        test('save resource with meta versionId', async () => {
+            const resource = {
+                resourceType: 'Patient',
+                id: '1',
+                meta: {
+                    versionId: '1',
+                },
+            };
+
+            await saveFHIRResource(resource);
+
+            expect(service).toHaveBeenLastCalledWith(save(resource));
+        });
     });
 
     test('method `saveFHIRResources`', async () => {
@@ -267,6 +300,7 @@ describe.only('Service `fhir`', () => {
         const resources = [
             { id: '1', resourceType: 'Patient' },
             { id: '2', resourceType: 'Patient' },
+            { id: '3', resourceType: 'Patient', meta: { versionId: '1' } },
             { resourceType: 'Patient' },
         ];
 
@@ -296,6 +330,20 @@ describe.only('Service `fhir`', () => {
                         resource: {
                             id: '2',
                             resourceType: 'Patient',
+                        },
+                    },
+                    {
+                        request: {
+                            method: 'PUT',
+                            url: '/Patient/3',
+                            ifMatch: '1',
+                        },
+                        resource: {
+                            id: '3',
+                            resourceType: 'Patient',
+                            meta: {
+                                versionId: '1',
+                            },
                         },
                     },
                     {
@@ -703,53 +751,76 @@ describe.only('Service `fhir`', () => {
         expect(result).toEqual(success('data'));
     });
 
-    test('method `applyFHIRServices`', async () => {
-        const result = await applyFHIRServices([
-            create({
-                resourceType: 'Patient',
-            }),
-            update({
-                resourceType: 'Patient',
-                id: '42',
-            }),
-            forceDelete('Patient', '42'),
-        ]);
+    describe('method `applyFHIRServices`', () => {
+        test('apply transaction', async () => {
+            const result = await applyFHIRServices([
+                create({
+                    resourceType: 'Patient',
+                }),
+                update({
+                    resourceType: 'Patient',
+                    id: '42',
+                }),
+                forceDelete('Patient', '42'),
+            ]);
 
-        expect(service).toHaveBeenLastCalledWith({
-            url: '/',
-            method: 'POST',
-            data: {
-                type: 'transaction',
-                entry: [
-                    {
-                        request: {
-                            method: 'POST',
-                            url: '/Patient',
+            expect(service).toHaveBeenLastCalledWith({
+                url: '/',
+                method: 'POST',
+                data: {
+                    type: 'transaction',
+                    entry: [
+                        {
+                            request: {
+                                method: 'POST',
+                                url: '/Patient',
+                            },
+                            resource: {
+                                resourceType: 'Patient',
+                            },
                         },
-                        resource: {
-                            resourceType: 'Patient',
+                        {
+                            request: {
+                                method: 'PUT',
+                                url: '/Patient/42',
+                            },
+                            resource: {
+                                resourceType: 'Patient',
+                                id: '42',
+                            },
                         },
-                    },
-                    {
-                        request: {
-                            method: 'PUT',
-                            url: '/Patient/42',
+                        {
+                            request: {
+                                method: 'DELETE',
+                                url: '/Patient/42',
+                            },
                         },
-                        resource: {
-                            resourceType: 'Patient',
-                            id: '42',
-                        },
-                    },
-                    {
-                        request: {
-                            method: 'DELETE',
-                            url: '/Patient/42',
-                        },
-                    },
-                ],
-            },
+                    ],
+                },
+            });
+            expect(result).toEqual(success('data'));
         });
-        expect(result).toEqual(success('data'));
+
+        test('apply batch', async () => {
+            const result = await applyFHIRServices([forceDelete('Patient', '42')], 'batch');
+
+            expect(service).toHaveBeenLastCalledWith({
+                url: '/',
+                method: 'POST',
+                data: {
+                    type: 'batch',
+                    entry: [
+                        {
+                            request: {
+                                method: 'DELETE',
+                                url: '/Patient/42',
+                            },
+                        },
+                    ],
+                },
+            });
+            expect(result).toEqual(success('data'));
+        });
     });
 
     describe('Method `transformToBundleEntry`', () => {
