@@ -231,19 +231,19 @@ export async function saveFHIRResources<R extends AidboxResource>(
     });
 }
 
-type RecursivePartial<T> = {
-    [P in keyof T]?: RecursivePartial<T[P]>;
+type NullableRecursivePartial<T> = {
+    [P in keyof T]?: NullableRecursivePartial<T[P]> | null;
 };
 
 export async function patchFHIRResource<R extends AidboxResource>(
-    resource: RecursivePartial<R> & Required<Pick<R, 'id' | 'resourceType'>>,
+    resource: NullableRecursivePartial<R> & Required<Pick<R, 'id' | 'resourceType'>>,
     searchParams?: SearchParams
 ): Promise<RemoteDataResult<R>> {
     return service(patch(resource, searchParams));
 }
 
 export function patch<R extends AidboxResource>(
-    resource: RecursivePartial<R> & Required<Pick<R, 'resourceType'>>,
+    resource: NullableRecursivePartial<R> & Required<Pick<R, 'resourceType'>>,
     searchParams?: SearchParams
 ): AxiosRequestConfig {
     if (searchParams) {
