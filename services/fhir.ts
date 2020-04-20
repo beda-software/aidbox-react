@@ -92,7 +92,7 @@ export async function createFHIRResource(
     return service(create(resource, searchParams));
 }
 
-export function create(resource: AidboxResource, searchParams?: SearchParams): AxiosRequestConfig {
+export function create<R extends AidboxResource>(resource: R, searchParams?: SearchParams): AxiosRequestConfig {
     return {
         method: 'POST',
         url: `/${resource.resourceType}`,
@@ -108,9 +108,14 @@ export async function updateFHIRResource<R extends AidboxResource>(
     return service(update(resource, searchParams));
 }
 
-export function update(resource: AidboxResource, searchParams?: SearchParams): AxiosRequestConfig {
+export function update<R extends AidboxResource>(resource: R, searchParams?: SearchParams): AxiosRequestConfig {
     if (searchParams) {
-        return { method: 'PUT', url: `/${resource.resourceType}`, data: resource, params: searchParams };
+        return {
+            method: 'PUT',
+            url: `/${resource.resourceType}`,
+            data: resource,
+            params: searchParams,
+        };
     }
 
     if (resource.id) {
@@ -350,7 +355,7 @@ export function extractBundleResources<T extends AidboxResource>(bundle: Bundle<
     if (!bundle.entry) {
         return entriesByResourceType;
     }
-    bundle.entry.forEach(function(entry) {
+    bundle.entry.forEach(function (entry) {
         const type = entry.resource!.resourceType;
         if (!entriesByResourceType[type]) {
             entriesByResourceType[type] = [];
@@ -364,7 +369,7 @@ export function getIncludedResource<T extends AidboxResource>(
     // TODO: improve type for includedResources: must contain T
     resources: ResourcesMap<T | any>,
     reference: AidboxReference<T>
-) {
+): T | undefined {
     const typeResources = resources[reference.resourceType];
     if (!typeResources) {
         return undefined;
@@ -389,8 +394,8 @@ export function getConcepts(valueSetId: string, params?: SearchParams): Promise<
     });
 }
 
-export async function applyFHIRService<T, F>(request: AxiosRequestConfig): Promise<RemoteDataResult<T, F>> {
-    return service(request);
+export async function applyFHIRService<T = any, F = any>(request: AxiosRequestConfig): Promise<RemoteDataResult<T, F>> {
+    return service<T, F>(request);
 }
 
 const toCamelCase = (str: string): string => {
@@ -423,11 +428,11 @@ export function transformToBundleEntry<R extends AidboxResource>(config: AxiosRe
     };
 }
 
-export async function applyFHIRServices<R extends AidboxResource, T, F>(
+export async function applyFHIRServices<R extends AidboxResource, T = any, F = any>(
     requests: Array<AxiosRequestConfig>,
     type: 'transaction' | 'batch' = 'transaction'
 ): Promise<RemoteDataResult<T[], F[]>> {
-    return service({
+    return service<T[], F[]>({
         method: 'POST',
         url: '/',
         data: {
