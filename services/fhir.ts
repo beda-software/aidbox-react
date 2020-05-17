@@ -386,6 +386,16 @@ export function getIncludedResources<T extends AidboxResource>(
     return (resources[resourceType] || []) as T[];
 }
 
+export function getMainResources<T extends AidboxResource>(bundle: Bundle<T>, resourceType: T['resourceType']): T[] {
+    if (!bundle.entry) {
+        return [];
+    }
+
+    return bundle.entry
+        .filter((entry) => entry.resource?.resourceType === resourceType)
+        .map((entry) => entry.resource!);
+}
+
 export function getConcepts(valueSetId: string, params?: SearchParams): Promise<RemoteDataResult<ValueSet>> {
     return service({
         method: 'GET',
