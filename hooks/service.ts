@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { loading, notAsked, RemoteData, RemoteDataResult, success } from '../libs/remoteData';
 
-interface ServiceManager<S> {
+export interface ServiceManager<S> {
     reload: () => void;
     set: (data: S) => void;
 }
