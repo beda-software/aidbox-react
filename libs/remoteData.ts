@@ -67,3 +67,15 @@ export function isSuccessAll<S>(responses: Array<RemoteData<S>>): responses is A
 export function isFailure<F>(remoteData: RemoteData<any, F>): remoteData is RemoteDataFailure<F> {
     return remoteData.status === Status.Failure;
 }
+
+export function isFailureAny<F>(responses: Array<RemoteData<any, F>>): responses is Array<RemoteDataFailure<F>> {
+    return responses.some(isFailure);
+}
+
+export function isLoadingAny(responses: Array<RemoteData>): responses is Array<RemoteDataLoading> {
+    return responses.some(isLoading);
+}
+
+export function isNotAskedAny(responses: Array<RemoteData>): responses is Array<RemoteDataNotAsked> {
+    return responses.some(isNotAsked);
+}

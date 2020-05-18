@@ -1,5 +1,17 @@
 import { AxiosRequestConfig } from 'axios';
-import { failure, isFailure, isSuccess, isSuccessAll, RemoteDataResult, success, RemoteData } from '../libs/remoteData';
+import {
+    failure,
+    isFailure,
+    isSuccess,
+    isSuccessAll,
+    RemoteDataResult,
+    success,
+    RemoteData,
+    isFailureAny,
+    isLoadingAny,
+    loading,
+    notAsked,
+} from '../libs/remoteData';
 import { axiosInstance } from './instance';
 
 export async function service<S = any, F = any>(config: AxiosRequestConfig): Promise<RemoteDataResult<S, F>> {
@@ -102,14 +114,22 @@ export function sequenceArray<T, F>(remoteDataArray: Array<RemoteData<T, F>>): R
         return success(remoteDataArray.map((remoteDataResult) => remoteDataResult.data));
     }
 
-    return failure(
-        remoteDataArray.reduce((accumulator, remoteDataResult: RemoteData<T, F>) => {
-            if (isFailure(remoteDataResult)) {
-                accumulator.push(remoteDataResult.error);
-            }
-            return accumulator;
-        }, [] as Array<F>)
-    );
+    if (isFailureAny(remoteDataArray)) {
+        return failure(
+            remoteDataArray.reduce((accumulator, remoteDataResult: RemoteData<T, F>) => {
+                if (isFailure(remoteDataResult)) {
+                    accumulator.push(remoteDataResult.error);
+                }
+                return accumulator;
+            }, [] as Array<F>)
+        );
+    }
+
+    if (isLoadingAny(remoteDataArray)) {
+        return loading;
+    }
+
+    return notAsked;
 }
 
 export function sequenceMap<I, F>(remoteDataMap: RemoteDataResultMap<I, F>): RemoteDataResult<I, F[]>;

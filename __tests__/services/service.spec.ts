@@ -1,4 +1,4 @@
-import { success, failure } from '../../libs/remoteData';
+import { success, failure, notAsked, loading } from '../../libs/remoteData';
 
 import {
     service,
@@ -180,7 +180,7 @@ describe('Service `service`', () => {
             expect(sequenceArray([failure('error'), failure('error')])).toEqual(failure(['error', 'error']));
         });
 
-        test('process when data are mixed', () => {
+        test('process when data are success and failed', () => {
             expect(sequenceArray([success('data'), failure('error')])).toEqual(failure(['error']));
         });
 
@@ -188,6 +188,22 @@ describe('Service `service`', () => {
             expect(sequenceArray([success('data-foo'), success('data-bar')])).toEqual(
                 success(['data-foo', 'data-bar'])
             );
+        });
+
+        test('process when data are loading and success', () => {
+            expect(sequenceArray([success('data-foo'), loading])).toEqual(loading);
+        });
+
+        test('process when data are failure and success', () => {
+            expect(sequenceArray([failure('error'), loading])).toEqual(failure(['error']));
+        });
+
+        test('process when data are success and not asked', () => {
+            expect(sequenceArray([success('data-foo'), notAsked])).toEqual(notAsked);
+        });
+
+        test('process when data are failure and not asked', () => {
+            expect(sequenceArray([failure('error'), notAsked])).toEqual(failure(['error']));
         });
     });
 

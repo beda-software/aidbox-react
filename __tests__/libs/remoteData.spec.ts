@@ -8,6 +8,9 @@ import {
     isSuccess,
     isSuccessAll,
     isFailure,
+    isFailureAny,
+    isLoadingAny,
+    isNotAskedAny,
 } from '../../libs/remoteData';
 
 describe('Lib `remoteData`', () => {
@@ -56,5 +59,20 @@ describe('Lib `remoteData`', () => {
     test('method `isSuccessAll`', () => {
         expect(isSuccessAll([success('a'), success('b')])).toBeTruthy();
         expect(isSuccessAll([success('a'), failure('b')])).toBeFalsy();
+    });
+
+    test('method `isFailureAny`', () => {
+        expect(isFailureAny([success('a'), failure('b')])).toBeTruthy();
+        expect(isFailureAny([success('a'), success('b')])).toBeFalsy();
+    });
+
+    test('method `isLoadingAny`', () => {
+        expect(isLoadingAny([success('a'), loading])).toBeTruthy();
+        expect(isLoadingAny([success('a'), success('b')])).toBeFalsy();
+    });
+
+    test('method `isNotAskedAny`', () => {
+        expect(isNotAskedAny([success('a'), notAsked])).toBeTruthy();
+        expect(isNotAskedAny([success('a'), success('b')])).toBeFalsy();
     });
 });
