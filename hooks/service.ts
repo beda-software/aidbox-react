@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { loading, notAsked, RemoteData, RemoteDataResult, success } from '../libs/remoteData';
+import { loading, notAsked, RemoteData, RemoteDataResult, success, failure } from '../libs/remoteData';
 
 export interface ServiceManager<S> {
     reload: () => void;
@@ -19,8 +19,12 @@ export function useService<S = any, F = any>(
     useEffect(() => {
         (async () => {
             setRemoteData(loading);
-            const response: RemoteDataResult<S, F> = await asyncFunction();
-            setRemoteData(response);
+            try {
+                const response: RemoteDataResult<S, F> = await asyncFunction();
+                setRemoteData(response);
+            } catch (err) {
+                setRemoteData(failure(err.response ? err.response.data : err.message));
+            }
         })();
         // eslint-disable-next-line
     }, deps.concat(reloadsCount));
