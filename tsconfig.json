@@ -8,10 +8,11 @@
           "src/contrib/aidbox": ["./__tests__/typings/src/contrib/aidbox"]
         },
         "sourceMap": true,
+        "outDir": "./lib",
+        "declaration": true,
         "allowJs": true,
         "jsx": "preserve",
         "moduleResolution": "node",
-        "rootDir": "src",
         "forceConsistentCasingInFileNames": true,
         "noImplicitReturns": true,
         "noImplicitThis": true,
@@ -27,9 +28,8 @@
         "strict": true,
         "resolveJsonModule": true,
         "isolatedModules": true,
-        "noEmit": true
+        "noEmit": false
     },
-    "exclude": [
-      "node_modules"
-    ]
+    "include": ["services", "hooks", "libs"],
+    "exclude": ["node_modules", "__tests__"]
 }
