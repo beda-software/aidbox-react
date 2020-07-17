@@ -1,11 +1,17 @@
 {
     "name": "aidbox-react",
+    "version": "1.0.0",
     "scripts": {
+        "build": "tsc",
         "coverage": "jest --config=./jest.config.json --coverage --coverageReporters=text-lcov | coveralls",
         "test": "jest --config=./jest.config.json",
         "test:watch": "jest --config=./jest.config.json --watch",
         "lint": "tslint -c tslint.json \"./{libs,hooks,services,__tests__}/**/*.ts\"",
-        "lint:fix": "npm run lint -- --fix"
+        "lint:fix": "npm run lint -- --fix",
+        "prepare": "npm run build"
+    },
+    "dependencies": {
+        "axios": "^0.19.2"
     },
     "devDependencies": {
         "@babel/core": "^7.7.7",
@@ -14,7 +20,6 @@
         "@testing-library/react": "^9.4.0",
         "@testing-library/react-hooks": "^3.2.1",
         "@types/jest": "^24.0.25",
-        "axios": "^0.19.1",
         "coveralls": "^3.0.9",
         "husky": "^4.2.0",
         "jest": "^24.9.0",
@@ -29,6 +34,7 @@
         "tslint-plugin-prettier": "^2.1.0",
         "typescript": "^3.7.4"
     },
+    "files": ["lib/**/*"],
     "husky": {
         "hooks": {
             "pre-commit": "lint-staged"
