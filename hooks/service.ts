@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 
-import { loading, notAsked, RemoteData, RemoteDataResult, success, failure } from '../libs/remoteData';
+import { loading, notAsked, RemoteData, RemoteDataResult, success, failure, isSuccess } from '../libs/remoteData';
 
 export interface ServiceManager<S> {
     reload: () => void;
-    set: (data: S) => void;
+    set: (dataOrFn: S | ((data: S) => S)) => void;
 }
 
 export function useService<S = any, F = any>(
@@ -31,6 +31,15 @@ export function useService<S = any, F = any>(
 
     return [
         remoteData,
-        { reload: () => setReloadsCount((count) => count + 1), set: (data: S) => setRemoteData(success(data)) },
+        {
+            reload: () => setReloadsCount((count) => count + 1),
+            set: (dataOrFn: S | ((data: S) => S)) => {
+                if (typeof dataOrFn === 'function') {
+                    setRemoteData((rd) => (isSuccess(rd) ? success((dataOrFn as (data: S) => S)(rd.data)) : rd));
+                } else {
+                    setRemoteData(success(dataOrFn));
+                }
+            },
+        },
     ];
 }
