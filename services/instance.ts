@@ -6,7 +6,7 @@ const flatten = (list: Array<any>): Array<any> =>
 
 const encodeEntry = (key: string, value: any) => encodeURIComponent(key) + '=' + encodeURIComponent(value);
 
-const packEntry = (accumulator: Array<string>, [key, value]: [string, any]) => {
+const packEntry = (accumulator: Array<string>, [key, value]: any) => {
     if (typeof value === 'undefined') {
         return accumulator;
     }
@@ -22,7 +22,7 @@ const packEntry = (accumulator: Array<string>, [key, value]: [string, any]) => {
     return accumulator;
 };
 
-export function buildQueryParams(params: object) {
+export function buildQueryParams(params: Record<string, any>) {
     return Object.entries(params)
         .reduce(packEntry, [] as Array<string>)
         .join('&');
