@@ -438,11 +438,11 @@ export function transformToBundleEntry<R extends AidboxResource>(config: AxiosRe
     };
 }
 
-export async function applyFHIRServices<R extends AidboxResource, T = any, F = any>(
+export async function applyFHIRServices<T extends AidboxResource, F = any>(
     requests: Array<AxiosRequestConfig>,
     type: 'transaction' | 'batch' = 'transaction'
-): Promise<RemoteDataResult<T[], F[]>> {
-    return service<T[], F[]>({
+): Promise<RemoteDataResult<Bundle<T>, F>> {
+    return service<Bundle<T>, F>({
         method: 'POST',
         url: '/',
         data: {
