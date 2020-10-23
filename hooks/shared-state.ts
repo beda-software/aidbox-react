@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { uuid4 } from 'utils/uuid';
+import { uuid4 } from '../utils/uuid';
 import { bus, dispatch } from './bus';
 
 interface StateManager<S> {
