@@ -1,7 +1,7 @@
 import { AxiosRequestConfig } from 'axios';
 import { AidboxReference, AidboxResource, ValueSet, Bundle, BundleEntry, id } from 'src/contrib/aidbox';
 
-import { RemoteDataResult } from '../libs/remoteData';
+import { isFailure, RemoteDataResult, success } from '../libs/remoteData';
 import { SearchParams } from './search';
 import { service } from './service';
 import { buildQueryParams } from './instance';
@@ -152,6 +152,44 @@ export async function getFHIRResources<R extends AidboxResource>(
 ): Promise<RemoteDataResult<Bundle<R>>> {
     return service(list(resourceType, searchParams, extraPath));
 }
+
+export async function getAllFHIRResources<R extends AidboxResource>(
+    resourceType: string,
+    params: SearchParams,
+    extraPath?: string
+) {
+    const resultBundleResponse = await getFHIRResources<R>(resourceType, params, extraPath);
+
+    if (isFailure(resultBundleResponse)) {
+        return resultBundleResponse;
+    }
+
+    let resultBundle = resultBundleResponse.data;
+
+    while (true) {
+        let nextLink = resultBundle.link?.find((link) => {
+            return link.relation === 'next';
+        });
+
+        if (!nextLink) {
+            break;
+        }
+
+        const response = await service({
+            method: 'GET',
+            url: nextLink.url
+        });
+
+        if (isFailure(response)) {
+            return response;
+        }
+
+        resultBundle = { ...response.data, entry: [...resultBundle.entry!, ...response.data.entry] };
+    }
+
+    return success(resultBundle);
+}
+
 
 export function list<R extends AidboxResource>(
     resourceType: R['resourceType'],
