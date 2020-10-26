@@ -1,9 +1,9 @@
 import { AxiosRequestConfig } from 'axios';
-import { AidboxReference, AidboxResource, ValueSet, Bundle, BundleEntry, BundleLink, id } from 'src/contrib/aidbox';
+import { AidboxReference, AidboxResource, ValueSet, Bundle, BundleEntry, id } from 'src/contrib/aidbox';
 
-import {isFailure, RemoteDataResult, success} from '../libs/remoteData';
+import { isFailure, RemoteDataResult, success } from '../libs/remoteData';
 import { SearchParams } from './search';
-import {service} from './service';
+import { service } from './service';
 import { buildQueryParams } from './instance';
 
 interface InactiveMappingItem {
@@ -167,7 +167,7 @@ export async function getAllFHIRResources<R extends AidboxResource>(
     let resultBundle = resultBundleResponse.data;
 
     while (true) {
-        let nextLink: BundleLink | undefined = resultBundle.link?.find((link: BundleLink) => {
+        let nextLink = resultBundle.link?.find((link) => {
             return link.relation === 'next';
         });
 
