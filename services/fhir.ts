@@ -177,7 +177,7 @@ export async function getAllFHIRResources<R extends AidboxResource>(
 
         const response = await service({
             method: 'GET',
-            url: nextLink.url
+            url: nextLink.url,
         });
 
         if (isFailure(response)) {
@@ -189,7 +189,6 @@ export async function getAllFHIRResources<R extends AidboxResource>(
 
     return success(resultBundle);
 }
-
 
 export function list<R extends AidboxResource>(
     resourceType: R['resourceType'],
@@ -393,7 +392,7 @@ export function extractBundleResources<T extends AidboxResource>(bundle: Bundle<
     if (!bundle.entry) {
         return entriesByResourceType;
     }
-    bundle.entry.forEach(function (entry) {
+    bundle.entry.forEach(function(entry) {
         const type = entry.resource!.resourceType;
         if (!entriesByResourceType[type]) {
             entriesByResourceType[type] = [];
