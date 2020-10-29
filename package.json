@@ -11,7 +11,8 @@
         "prepare": "npm run build"
     },
     "dependencies": {
-        "axios": "^0.19.2"
+        "axios": "^0.19.2",
+        "moment": "^2.29.1"
     },
     "devDependencies": {
         "@babel/core": "^7.7.7",
@@ -34,7 +35,9 @@
         "tslint-plugin-prettier": "^2.1.0",
         "typescript": "^3.7.4"
     },
-    "files": ["lib/**/*"],
+    "files": [
+        "lib/**/*"
+    ],
     "husky": {
         "hooks": {
             "pre-commit": "lint-staged"
