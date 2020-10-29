@@ -1,15 +1,10 @@
-import {
-    ensure,
-    login,
-    // getUserInfo,
-    getToken,
-    withRootAccess,
-    LoginService,
-} from '../../utils/tests';
-
+import { ensure, login, getUserInfo, getToken, withRootAccess, LoginService } from '../../utils/tests';
+import { service } from '../../services/service';
 import { axiosInstance } from '../../services/instance';
 import { success, failure } from '../../libs/remoteData';
 import { User } from 'src/contrib/aidbox';
+
+jest.mock('../../services/service', () => ({ service: jest.fn() }));
 
 describe('Util `tests`', () => {
     const user: User = {
@@ -27,6 +22,7 @@ describe('Util `tests`', () => {
     };
 
     beforeEach(() => {
+        jest.clearAllMocks();
         jest.resetAllMocks();
     });
 
@@ -89,6 +85,24 @@ describe('Util `tests`', () => {
         const loginService: LoginService = jest.fn(async () => await success(token));
 
         await login(user, loginService);
+
         expect((loginService as jest.Mock).mock.calls[0]).toEqual([user]);
+    });
+
+    test('method `getUserInfo`', async () => {
+        (<jest.Mock>service).mockImplementation(() => success(user));
+
+        const result = await getUserInfo();
+
+        expect((service as jest.Mock).mock.calls[0][0]).toEqual({
+            method: 'GET',
+            url: '/auth/userinfo',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            },
+        });
+
+        expect(result).toEqual(user);
     });
 });
