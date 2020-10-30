@@ -1,7 +1,4 @@
 import {
-    // formatFHIRTime,
-    // formatFHIRDate,
-    // formatFHIRDateTime,
     FHIRDateFormat,
     FHIRTimeFormat,
     FHIRDateTimeFormat,
