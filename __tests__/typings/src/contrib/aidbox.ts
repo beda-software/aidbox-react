@@ -138,3 +138,16 @@ export interface User {
     emailConfirmed?: boolean;
     meta: Meta;
 }
+
+export interface OperationOutcome {
+    readonly resourceType: 'OperationOutcome';
+    id?: id;
+    meta?: Meta;
+    contained?: AidboxResource[];
+    issue: OperationOutcomeIssue[];
+}
+
+export interface OperationOutcomeIssue {
+    id?: string;
+    code: code;
+}
