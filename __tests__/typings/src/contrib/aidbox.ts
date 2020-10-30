@@ -150,4 +150,7 @@ export interface OperationOutcome {
 export interface OperationOutcomeIssue {
     id?: string;
     code: code;
+    details?: {
+        text?: string;
+    };
 }

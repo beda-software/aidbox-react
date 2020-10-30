@@ -1,5 +1,4 @@
-import { isOperationOutcome, isConflict, formatError } from '../../utils/error';
-import { OperationOutcome } from 'src/contrib/aidbox';
+import { isOperationOutcome, isBackendError, formatError } from '../../utils/error';
 
 describe('Util `tests`', () => {
     describe('method `isOperationOutcome`', () => {
@@ -14,43 +13,119 @@ describe('Util `tests`', () => {
         });
     });
 
-    test('method `isConflict`', () => {
-        const error: OperationOutcome = {
-            resourceType: 'OperationOutcome',
-            issue: [{ code: 'conflict' }],
-        };
+    describe('method `isBackendError`', () => {
+        test('`BackendError` error', () => {
+            expect(isBackendError({ error: 'bad_login' })).toBeTruthy();
+        });
 
-        expect(isConflict(error)).toBeTruthy();
+        test('not `BackendError` error', () => {
+            expect(isBackendError(null)).toBeFalsy();
+            expect(isBackendError({})).toBeFalsy();
+            expect(isBackendError({ resourceType: 'unknown' })).toBeFalsy();
+        });
     });
 
-    describe('method `formatError`', () => {
-        test('error is not `OperationOutcome`', () => {
+    describe('method `formatError` without args', () => {
+        test('unknown error', () => {
             const error = 'Error';
-            const result = `Something went wrong.\n${JSON.stringify(error)}`;
+            const result = `Unknown error`;
 
             expect(formatError(error)).toEqual(result);
         });
 
-        test('error is conflict', () => {
-            const error = {
-                resourceType: 'OperationOutcome',
-                issue: [{ code: 'conflict' }],
-            };
-
-            const result = 'You have outdated data on the page. Please refresh the page and try again';
+        test('network error', () => {
+            const error = 'Network Error';
+            const result = `Network Error`;
 
             expect(formatError(error)).toEqual(result);
         });
 
-        test('process `OperationOutcome` error', () => {
+        test('OperationOutcome error', () => {
             const error = {
                 resourceType: 'OperationOutcome',
-                issue: [{ code: 'specified code' }, { code: 'unknown code' }],
+                issue: [{ code: 'bad_login', details: { text: 'You have send bad login' } }],
             };
-
-            const result = `Something went wrong.\nError codes: specified code, unknown code`;
+            const result = `You have send bad login`;
 
             expect(formatError(error)).toEqual(result);
+        });
+
+        test('BackendError error', () => {
+            const error = {
+                error: 'bad_login',
+                error_description: 'You have send bad login',
+            };
+            const result = `You have send bad login`;
+
+            expect(formatError(error)).toEqual(result);
+        });
+
+        test('unhandled error without description', () => {
+            const error = {
+                error: 'aidbox_error',
+            };
+            const result = `Unknown error (aidbox_error)`;
+
+            expect(formatError(error)).toEqual(result);
+        });
+    });
+
+    describe('method `formatError` with mapping', () => {
+        test('BackendError error', () => {
+            const error = {
+                error: 'bad_login',
+                error_description: 'You have send bad login',
+            };
+            const mapping = { bad_login: 'Bad login' };
+            const result = 'Bad login';
+
+            expect(formatError(error, mapping)).toEqual(result);
+        });
+
+        test('unhandled error without description', () => {
+            const error = {
+                error: 'aidbox_error',
+            };
+            const mapping = { aidbox_error: 'Something went wrong with aidbox' };
+            const result = `Something went wrong with aidbox`;
+
+            expect(formatError(error, mapping)).toEqual(result);
+        });
+
+        test('unknown error override', () => {
+            const error = null;
+            const mapping = { unknown: 'Something went wrong' };
+            const result = `Something went wrong`;
+
+            expect(formatError(error, mapping)).toEqual(result);
+        });
+
+        test('BackendError and unhandled error code', () => {
+            const error = { error: 'bad_password', error_description: 'You have wrong password' };
+            const mapping = { bad_login: 'Wrong login' };
+            const result = `You have wrong password`;
+
+            expect(formatError(error, mapping)).toEqual(result);
+        });
+    });
+
+    describe('method `formatError` with unhandledError', () => {
+        test('BackendError and unhandled error code', () => {
+            const error = { error: 'bad_password', error_description: 'You have wrong password' };
+            const mapping = { bad_login: 'Wrong login' };
+            const unhandledError = (errorCode: string) => `Please contact support (${errorCode})`;
+            const result = `Please contact support (bad_password)`;
+
+            expect(formatError(error, mapping, unhandledError)).toEqual(result);
+        });
+
+        test('BackendError and handled error code', () => {
+            const error = { error: 'bad_password', error_description: 'You have wrong password' };
+            const mapping = { bad_password: 'Wrong password' };
+            const unhandledError = (errorCode: string) => `Please contact support (${errorCode})`;
+            const result = `Wrong password`;
+
+            expect(formatError(error, mapping, unhandledError)).toEqual(result);
         });
     });
 });
