@@ -13,11 +13,11 @@ const RealDate = Date.now;
 
 describe('Util `tests`', () => {
     beforeAll(() => {
-        global.Date.now = jest.fn(() => new Date('2020-10-10T10:30:00Z').getTime());
+        Date.now = jest.fn(() => new Date('2020-10-10T10:30:00Z').getTime());
     });
 
     afterAll(() => {
-        global.Date.now = RealDate;
+        Date.now = RealDate;
     });
 
     describe(`parse and format`, () => {
