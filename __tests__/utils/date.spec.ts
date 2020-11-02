@@ -9,7 +9,17 @@ import {
     extractFHIRTime,
 } from '../../utils/date';
 
+const RealDate = Date.now;
+
 describe('Util `tests`', () => {
+    beforeAll(() => {
+        global.Date.now = jest.fn(() => new Date('2020-10-10T10:30:00Z').getTime());
+    });
+
+    afterAll(() => {
+        global.Date.now = RealDate;
+    });
+
     describe(`parse and format`, () => {
         test('time', () => {
             expect(parseFHIRTime('12').format(FHIRTimeFormat)).toEqual('12:00:00');
