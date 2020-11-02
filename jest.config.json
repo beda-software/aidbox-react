@@ -9,5 +9,6 @@
         "js",
         "jsx"
     ],
-    "verbose": true
+    "verbose": true,
+    "globalSetup": "./setup.js"
 }
