@@ -34,10 +34,14 @@ export function extractErrorCode(error: any) {
  * formatError(
  *     error,
  *     {'conflict': 'Please reload page'},
- *     (errorCode) => `Unknown error ${errorCode}. Please reach tech support`
+ *     (errorCode, errorDescription) => `An error occurred: ${errorDescription} (${errorCode}). Please reach tech support`
  * )
  */
-export function formatError(error: any, mapping?: ErrorMapping, unhandledError?: (errorCode: string) => string) {
+export function formatError(
+    error: any,
+    mapping?: ErrorMapping,
+    format?: (errorCode: string, errorDescription: string) => string
+) {
     const extendedMapping = {
         // @ts-ignore
         ...baseErrorMapping,
@@ -50,19 +54,20 @@ export function formatError(error: any, mapping?: ErrorMapping, unhandledError?:
         return extendedMapping[errorCode];
     }
 
-    if (unhandledError) {
-        return unhandledError(errorCode);
-    }
-
+    let errorDescription: string = baseErrorMapping.unknown;
     if (isOperationOutcome(error) && error.issue[0].details?.text) {
-        return error.issue[0].details?.text;
+        errorDescription = error.issue[0].details?.text;
     }
 
     if (isBackendError(error) && error.error_description) {
-        return error.error_description;
+        errorDescription = error.error_description;
     }
 
-    return `Unknown error (${errorCode})`;
+    if (format) {
+        return format(errorCode, errorDescription);
+    }
+
+    return `${errorDescription} (${errorCode})`;
 }
 
 function isObject(value: any): value is Object {

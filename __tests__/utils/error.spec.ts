@@ -45,7 +45,7 @@ describe('Util `tests`', () => {
                 resourceType: 'OperationOutcome',
                 issue: [{ code: 'bad_login', details: { text: 'You have send bad login' } }],
             };
-            const result = `You have send bad login`;
+            const result = `You have send bad login (bad_login)`;
 
             expect(formatError(error)).toEqual(result);
         });
@@ -55,12 +55,12 @@ describe('Util `tests`', () => {
                 error: 'bad_login',
                 error_description: 'You have send bad login',
             };
-            const result = `You have send bad login`;
+            const result = `You have send bad login (bad_login)`;
 
             expect(formatError(error)).toEqual(result);
         });
 
-        test('unhandled error without description', () => {
+        test('default error format without description', () => {
             const error = {
                 error: 'aidbox_error',
             };
@@ -82,7 +82,7 @@ describe('Util `tests`', () => {
             expect(formatError(error, mapping)).toEqual(result);
         });
 
-        test('unhandled error without description', () => {
+        test('default format error without description', () => {
             const error = {
                 error: 'aidbox_error',
             };
@@ -100,17 +100,17 @@ describe('Util `tests`', () => {
             expect(formatError(error, mapping)).toEqual(result);
         });
 
-        test('BackendError and unhandled error code', () => {
+        test('BackendError and default error format', () => {
             const error = { error: 'bad_password', error_description: 'You have wrong password' };
             const mapping = { bad_login: 'Wrong login' };
-            const result = `You have wrong password`;
+            const result = `You have wrong password (bad_password)`;
 
             expect(formatError(error, mapping)).toEqual(result);
         });
     });
 
-    describe('method `formatError` with unhandledError', () => {
-        test('BackendError and unhandled error code', () => {
+    describe('method `formatError` with format', () => {
+        test('BackendError and missing error code', () => {
             const error = { error: 'bad_password', error_description: 'You have wrong password' };
             const mapping = { bad_login: 'Wrong login' };
             const unhandledError = (errorCode: string) => `Please contact support (${errorCode})`;
@@ -119,7 +119,7 @@ describe('Util `tests`', () => {
             expect(formatError(error, mapping, unhandledError)).toEqual(result);
         });
 
-        test('BackendError and handled error code', () => {
+        test('BackendError and existing error code', () => {
             const error = { error: 'bad_password', error_description: 'You have wrong password' };
             const mapping = { bad_password: 'Wrong password' };
             const unhandledError = (errorCode: string) => `Please contact support (${errorCode})`;
