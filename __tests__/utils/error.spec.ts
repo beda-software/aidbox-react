@@ -1,4 +1,10 @@
-import { isOperationOutcome, isBackendError, formatError } from '../../utils/error';
+import {
+    isOperationOutcome,
+    isBackendError,
+    formatError,
+    extractErrorDescription,
+    extractErrorCode,
+} from '../../utils/error';
 
 describe('Util `tests`', () => {
     describe('method `isOperationOutcome`', () => {
@@ -25,9 +31,72 @@ describe('Util `tests`', () => {
         });
     });
 
-    describe('method `formatError` without args', () => {
+    describe('method `extractErrorCode`', () => {
         test('unknown error', () => {
-            const error = 'Error';
+            const error = null;
+            const result = 'unknown';
+
+            expect(extractErrorCode(error)).toEqual(result);
+        });
+
+        test('network error', () => {
+            const error = 'Network Error';
+            const result = 'network_error';
+
+            expect(extractErrorCode(error)).toEqual(result);
+        });
+
+        test('BackendError', () => {
+            const error = { error: 'code' };
+            const result = 'code';
+
+            expect(extractErrorCode(error)).toEqual(result);
+        });
+
+        test('OperationOutcome', () => {
+            const error = { resourceType: 'OperationOutcome', issue: [{ code: 'code' }] };
+            const result = 'code';
+
+            expect(extractErrorCode(error)).toEqual(result);
+        });
+    });
+
+    describe('method `extractErrorDescription`', () => {
+        test('unknown error', () => {
+            const error = null;
+            const result = `Unknown error`;
+
+            expect(extractErrorDescription(error)).toEqual(result);
+        });
+
+        test('network error', () => {
+            const error = 'Network Error';
+            const result = `Network error`;
+
+            expect(extractErrorDescription(error)).toEqual(result);
+        });
+
+        test('BackendError', () => {
+            const error = { error: 'code', error_description: 'Description' };
+            const result = 'Description';
+
+            expect(extractErrorDescription(error)).toEqual(result);
+        });
+
+        test('OperationOutcome', () => {
+            const error = {
+                resourceType: 'OperationOutcome',
+                issue: [{ code: 'code', details: { text: 'Description' } }],
+            };
+            const result = 'Description';
+
+            expect(extractErrorDescription(error)).toEqual(result);
+        });
+    });
+
+    describe('method `formatError` without config', () => {
+        test('unknown error', () => {
+            const error = null;
             const result = `Unknown error`;
 
             expect(formatError(error)).toEqual(result);
@@ -35,7 +104,7 @@ describe('Util `tests`', () => {
 
         test('network error', () => {
             const error = 'Network Error';
-            const result = `Network Error`;
+            const result = `Network error`;
 
             expect(formatError(error)).toEqual(result);
         });
@@ -43,9 +112,9 @@ describe('Util `tests`', () => {
         test('OperationOutcome error', () => {
             const error = {
                 resourceType: 'OperationOutcome',
-                issue: [{ code: 'bad_login', details: { text: 'You have send bad login' } }],
+                issue: [{ code: 'bad_login', details: { text: 'You have sent bad login' } }],
             };
-            const result = `You have send bad login (bad_login)`;
+            const result = `You have sent bad login (bad_login)`;
 
             expect(formatError(error)).toEqual(result);
         });
@@ -53,14 +122,14 @@ describe('Util `tests`', () => {
         test('BackendError error', () => {
             const error = {
                 error: 'bad_login',
-                error_description: 'You have send bad login',
+                error_description: 'You have sent bad login',
             };
-            const result = `You have send bad login (bad_login)`;
+            const result = `You have sent bad login (bad_login)`;
 
             expect(formatError(error)).toEqual(result);
         });
 
-        test('default error format without description', () => {
+        test('error without description', () => {
             const error = {
                 error: 'aidbox_error',
             };
@@ -79,7 +148,7 @@ describe('Util `tests`', () => {
             const mapping = { bad_login: 'Bad login' };
             const result = 'Bad login';
 
-            expect(formatError(error, mapping)).toEqual(result);
+            expect(formatError(error, { mapping })).toEqual(result);
         });
 
         test('default format error without description', () => {
@@ -89,7 +158,7 @@ describe('Util `tests`', () => {
             const mapping = { aidbox_error: 'Something went wrong with aidbox' };
             const result = `Something went wrong with aidbox`;
 
-            expect(formatError(error, mapping)).toEqual(result);
+            expect(formatError(error, { mapping })).toEqual(result);
         });
 
         test('unknown error override', () => {
@@ -97,7 +166,7 @@ describe('Util `tests`', () => {
             const mapping = { unknown: 'Something went wrong' };
             const result = `Something went wrong`;
 
-            expect(formatError(error, mapping)).toEqual(result);
+            expect(formatError(error, { mapping })).toEqual(result);
         });
 
         test('BackendError and default error format', () => {
@@ -105,27 +174,27 @@ describe('Util `tests`', () => {
             const mapping = { bad_login: 'Wrong login' };
             const result = `You have wrong password (bad_password)`;
 
-            expect(formatError(error, mapping)).toEqual(result);
+            expect(formatError(error, { mapping })).toEqual(result);
         });
     });
 
     describe('method `formatError` with format', () => {
-        test('BackendError and missing error code', () => {
+        test('BackendError with missing code in mapping', () => {
             const error = { error: 'bad_password', error_description: 'You have wrong password' };
             const mapping = { bad_login: 'Wrong login' };
-            const unhandledError = (errorCode: string) => `Please contact support (${errorCode})`;
+            const format = (errorCode: string) => `Please contact support (${errorCode})`;
             const result = `Please contact support (bad_password)`;
 
-            expect(formatError(error, mapping, unhandledError)).toEqual(result);
+            expect(formatError(error, { mapping, format })).toEqual(result);
         });
 
         test('BackendError and existing error code', () => {
             const error = { error: 'bad_password', error_description: 'You have wrong password' };
             const mapping = { bad_password: 'Wrong password' };
-            const unhandledError = (errorCode: string) => `Please contact support (${errorCode})`;
+            const format = (errorCode: string) => `Please contact support (${errorCode})`;
             const result = `Wrong password`;
 
-            expect(formatError(error, mapping, unhandledError)).toEqual(result);
+            expect(formatError(error, { mapping, format })).toEqual(result);
         });
     });
 });
