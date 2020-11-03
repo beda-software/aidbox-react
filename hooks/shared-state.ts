@@ -26,7 +26,7 @@ export function createSharedState<S>(initial: S): StateManager<S> {
                 ({ s }) => {
                     setState(s);
                 },
-                [setState],
+                [setState]
             );
 
             return [state, setter];
