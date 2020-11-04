@@ -30,6 +30,6 @@
         "isolatedModules": true,
         "noEmit": false
     },
-    "include": ["services", "hooks", "libs"],
+    "include": ["services", "hooks", "libs", "utils"],
     "exclude": ["node_modules", "__tests__"]
 }
