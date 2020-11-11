@@ -31,7 +31,7 @@ import {
 } from '../../services/fhir';
 import { service } from '../../services/service';
 import { success } from '../../libs/remoteData';
-import { Bundle, AidboxResource } from 'src/contrib/aidbox';
+import { Bundle, Patient, Practitioner } from 'src/contrib/aidbox';
 import { AxiosTransformer } from 'axios';
 
 jest.mock('../../services/service', () => {
@@ -623,14 +623,16 @@ describe.only('Service `fhir`', () => {
     });
 
     describe('method `extractBundleResources`', () => {
-        test("extact empty object when there's not entry property", () => {
-            const bundle = {} as Bundle<AidboxResource>;
+        test("extract empty object when there's not entry property", () => {
+            const bundle: Bundle<Patient | Practitioner> = { resourceType: 'Bundle', type: 'searchset' };
 
-            expect(extractBundleResources(bundle)).toEqual({});
+            expect(extractBundleResources(bundle).Practitioner).toEqual([]);
+            expect(extractBundleResources(bundle).Patient).toEqual([]);
         });
         test("extract bundle there's entry field property", () => {
-            const bundle = {
+            const bundle: Bundle<Patient | Practitioner> = {
                 resourceType: 'Bundle',
+                type: 'searchset',
                 entry: [
                     {
                         resource: {
@@ -653,11 +655,11 @@ describe.only('Service `fhir`', () => {
                     {
                         resource: {
                             id: '4',
-                            resourceType: 'customType',
+                            resourceType: 'Practitioner',
                         },
                     },
                 ],
-            } as Bundle<AidboxResource>;
+            };
 
             expect(extractBundleResources(bundle)).toEqual({
                 Patient: [
@@ -665,7 +667,7 @@ describe.only('Service `fhir`', () => {
                     { id: '2', resourceType: 'Patient' },
                     { id: '3', resourceType: 'Patient' },
                 ],
-                customType: [{ id: '4', resourceType: 'customType' }],
+                Practitioner: [{ id: '4', resourceType: 'Practitioner' }],
             });
         });
     });

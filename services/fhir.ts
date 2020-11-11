@@ -385,21 +385,24 @@ export function isReference<T extends AidboxResource>(
     ).length;
 }
 
-export type ResourcesMap<T extends AidboxResource> = { [x: string]: T[] | undefined };
+export type ResourcesMap<T extends AidboxResource> = {
+    [P in T['resourceType']]: T extends { resourceType: P } ? T[] : never;
+};
 
 export function extractBundleResources<T extends AidboxResource>(bundle: Bundle<T>): ResourcesMap<T> {
-    const entriesByResourceType = {};
-    if (!bundle.entry) {
-        return entriesByResourceType;
-    }
-    bundle.entry.forEach(function(entry) {
+    const entriesByResourceType = {} as ResourcesMap<T>;
+    const entries = bundle.entry || [];
+    entries.forEach(function(entry) {
         const type = entry.resource!.resourceType;
         if (!entriesByResourceType[type]) {
             entriesByResourceType[type] = [];
         }
         entriesByResourceType[type].push(entry.resource);
     });
-    return entriesByResourceType;
+
+    return new Proxy(entriesByResourceType, {
+        get: (obj, prop) => (obj.hasOwnProperty(prop) ? obj[prop] : []),
+    });
 }
 
 export function getIncludedResource<T extends AidboxResource>(

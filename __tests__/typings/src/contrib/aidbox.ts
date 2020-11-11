@@ -96,7 +96,7 @@ export interface Bundle<R extends AidboxResource> {
     link?: BundleLink[];
     entry?: Array<BundleEntry<R>>;
     signature?: Signature;
-    params: BundleParam[];
+    params?: BundleParam[];
 }
 
 export interface BundleParam {
@@ -112,6 +112,15 @@ export interface BundleLink {
 
 export interface Patient {
     readonly resourceType: 'Patient';
+    id?: id;
+    meta?: Meta;
+    implicitRules?: uri;
+    contained?: AidboxResource[];
+    active?: boolean;
+}
+
+export interface Practitioner {
+    readonly resourceType: 'Practitioner';
     id?: id;
     meta?: Meta;
     implicitRules?: uri;
