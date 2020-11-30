@@ -1,5 +1,5 @@
 import { act, renderHook } from '@testing-library/react-hooks';
-import { Bundle } from 'src/contrib/aidbox';
+import { Bundle } from 'shared/lib/contrib/aidbox';
 import { usePager } from '../../hooks/pager';
 import { useService } from '../../hooks/service';
 import { success } from '../../libs/remoteData';

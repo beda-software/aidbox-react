@@ -31,7 +31,7 @@ import {
 } from '../../services/fhir';
 import { service } from '../../services/service';
 import { success } from '../../libs/remoteData';
-import { Bundle, Patient, Practitioner } from 'src/contrib/aidbox';
+import { Bundle, Patient, Practitioner } from 'shared/lib/contrib/aidbox';
 import { AxiosTransformer } from 'axios';
 
 jest.mock('../../services/service', () => {

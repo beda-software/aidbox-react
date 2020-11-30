@@ -1,5 +1,5 @@
 import { AxiosRequestConfig } from 'axios';
-import { AidboxReference, AidboxResource, ValueSet, Bundle, BundleEntry, id } from 'src/contrib/aidbox';
+import { AidboxReference, AidboxResource, ValueSet, Bundle, BundleEntry, id } from 'shared/lib/contrib/aidbox';
 
 import { isFailure, RemoteDataResult, success } from '../libs/remoteData';
 import { SearchParams } from './search';

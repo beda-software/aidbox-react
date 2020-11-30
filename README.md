@@ -38,7 +38,7 @@ And use hooks and services
 ```typescript jsx
 import * as React from 'react';
 
-import { User } from 'src/contrib/aidbox';
+import { User } from 'shared/lib/contrib/aidbox';
 import { usePager } from 'src/contrib/aidbox-react/services/service';
 import { isLoading, isSuccess } from 'src/contrib/aidbox-react/libs/remoteData';
 import { extractBundleResources } from 'src/contrib/aidbox-react/services/fhir';
@@ -75,7 +75,7 @@ import * as React from 'react';
 
 import { useCRUD } from 'src/contrib/aidbox-react/hooks/crud';
 import { isLoading, isSuccess } from 'src/contrib/aidbox-react/libs/remoteData';
-import { Patient } from 'src/contrib/aidbox';
+import { Patient } from 'shared/lib/contrib/aidbox';
 
 export function UserList(props: {}) {
     const [resourceResponse, crudManager] = useCRUD<Patient>('Patient', 'toggle', true, {

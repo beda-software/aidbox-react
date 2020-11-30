@@ -5,7 +5,7 @@
         "lib": ["dom", "es2015", "es2016", "es2017"],
         "baseUrl": ".",
         "paths": {
-          "src/contrib/aidbox": ["./__tests__/typings/src/contrib/aidbox"]
+          "shared/lib/contrib/aidbox": ["./__tests__/typings/src/contrib/aidbox"]
         },
         "sourceMap": true,
         "outDir": "./lib",

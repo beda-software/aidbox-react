@@ -2,7 +2,7 @@ import { isSuccess, RemoteData, RemoteDataResult } from '../libs/remoteData'
 import { axiosInstance, resetInstanceToken, setInstanceToken } from '../services/instance'
 import { service } from '../services/service'
 import { Token } from '../services/token'
-import { User } from 'src/contrib/aidbox'
+import { User } from 'shared/lib/contrib/aidbox'
 
 export type LoginService = (user: User) => Promise<RemoteData<Token>>
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { AidboxResource } from 'src/contrib/aidbox';
+import { AidboxResource } from 'shared/lib/contrib/aidbox';
 import { failure, isFailure, isSuccess, loading, notAsked, RemoteData, success } from '../libs/remoteData';
 import {
     deleteFHIRResource,

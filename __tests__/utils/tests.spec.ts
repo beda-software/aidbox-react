@@ -2,7 +2,7 @@ import { ensure, login, getUserInfo, getToken, withRootAccess, LoginService } fr
 import { service } from '../../services/service';
 import { axiosInstance } from '../../services/instance';
 import { success, failure } from '../../libs/remoteData';
-import { User } from 'src/contrib/aidbox';
+import { User } from 'shared/lib/contrib/aidbox';
 
 jest.mock('../../services/service', () => ({ service: jest.fn() }));
 
