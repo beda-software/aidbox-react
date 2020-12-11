@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react-hooks';
-import { Patient } from 'shared/lib/contrib/aidbox';
-import { useCRUD } from '../../hooks/crud';
+import { Patient } from 'shared/src/contrib/aidbox';
+
 import { success, failure, loading } from '../../libs/remoteData';
 import {
     getFHIRResource,
@@ -10,6 +10,7 @@ import {
     extractBundleResources,
     getReference,
 } from '../../services/fhir';
+import { useCRUD } from '../crud';
 
 jest.mock('../../services/fhir', () => ({
     getFHIRResource: jest.fn(),

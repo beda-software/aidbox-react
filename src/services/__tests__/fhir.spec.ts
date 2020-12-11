@@ -1,3 +1,7 @@
+import { AxiosTransformer } from 'axios';
+import { Bundle, Patient, Practitioner } from 'shared/src/contrib/aidbox';
+
+import { success } from '../../libs/remoteData';
 import {
     create,
     createFHIRResource,
@@ -28,17 +32,14 @@ import {
     applyFHIRService,
     applyFHIRServices,
     transformToBundleEntry,
-} from '../../services/fhir';
-import { service } from '../../services/service';
-import { success } from '../../libs/remoteData';
-import { Bundle, Patient, Practitioner } from 'shared/lib/contrib/aidbox';
-import { AxiosTransformer } from 'axios';
+} from '../fhir';
+import { service } from '../service';
 
-jest.mock('../../services/service', () => {
+jest.mock('../service', () => {
     return { service: jest.fn(() => Promise.resolve(success('data'))) };
 });
 
-describe.only('Service `fhir`', () => {
+describe('Service `fhir`', () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });
@@ -424,7 +425,8 @@ describe.only('Service `fhir`', () => {
             const resourceType = 'Patient';
 
             await findFHIRResource(resourceType, params);
-            const { transformResponse, ...restFindResult } = find(resourceType, params);
+            const restFindResult = find(resourceType, params);
+            delete restFindResult.transformResponse;
 
             expect(service).toHaveBeenLastCalledWith(expect.objectContaining(restFindResult));
         });
@@ -436,7 +438,8 @@ describe.only('Service `fhir`', () => {
 
             await findFHIRResource(resourceType, params, extraPath);
 
-            const { transformResponse, ...restFindResult } = find(resourceType, params, extraPath);
+            const restFindResult = find(resourceType, params, extraPath);
+            delete restFindResult.transformResponse;
 
             expect(service).toHaveBeenLastCalledWith(expect.objectContaining(restFindResult));
         });

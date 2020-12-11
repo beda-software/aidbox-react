@@ -1,10 +1,10 @@
 import { AxiosRequestConfig } from 'axios';
-import { AidboxReference, AidboxResource, ValueSet, Bundle, BundleEntry, id } from 'shared/lib/contrib/aidbox';
+import { AidboxReference, AidboxResource, ValueSet, Bundle, BundleEntry, id } from 'shared/src/contrib/aidbox';
 
 import { isFailure, RemoteDataResult, success } from '../libs/remoteData';
+import { buildQueryParams } from './instance';
 import { SearchParams } from './search';
 import { service } from './service';
-import { buildQueryParams } from './instance';
 
 interface InactiveMappingItem {
     searchField: string;
@@ -337,7 +337,7 @@ export async function forceDeleteFHIRResource<R extends AidboxResource>(
 }
 
 export function forceDelete<R extends AidboxResource>(
-    resourceType: string,
+    resourceType: R['resourceType'],
     idOrSearchParams: id | SearchParams
 ): AxiosRequestConfig {
     if (isObject(idOrSearchParams)) {

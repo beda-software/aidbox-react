@@ -1,10 +1,4 @@
-import {
-    axiosInstance,
-    buildQueryParams,
-    setInstanceBaseURL,
-    setInstanceToken,
-    resetInstanceToken,
-} from '../../services/instance';
+import { axiosInstance, buildQueryParams, setInstanceBaseURL, setInstanceToken, resetInstanceToken } from '../instance';
 
 describe('Service `instance`', () => {
     test('method `setInstanceBaseURL`', () => {

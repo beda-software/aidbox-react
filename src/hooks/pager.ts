@@ -1,6 +1,6 @@
 import { useState } from 'react';
+import { AidboxResource, Bundle } from 'shared/src/contrib/aidbox';
 
-import { AidboxResource, Bundle } from 'shared/lib/contrib/aidbox';
 import { isSuccess, RemoteData } from '../libs/remoteData';
 import { getFHIRResources } from '../services/fhir';
 import { SearchParams } from '../services/search';
