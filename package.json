@@ -1,6 +1,6 @@
 {
     "name": "aidbox-react",
-    "version": "1.0.2",
+    "version": "1.1.0",
     "scripts": {
         "build": "tsc",
         "coverage": "jest --config=./jest.config.json --coverage --coverageReporters=text-lcov | coveralls",
