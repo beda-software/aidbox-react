@@ -1,8 +1,8 @@
 import { act, renderHook } from '@testing-library/react-hooks';
 import React from 'react';
 
-import { success, loading } from '../../libs/remoteData';
-import { useService } from '../service';
+import { useService } from '../../src/hooks/service';
+import { success, loading } from '../../src/libs/remoteData';
 
 describe('Hook `useService`', () => {
     const data = { custom: 'data' };

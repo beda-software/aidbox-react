@@ -31,5 +31,5 @@
         "noEmit": false
     },
     "include": ["src"],
-    "exclude": ["node_modules", "**/__tests__/**", "typings"]
+    "exclude": ["node_modules", "tests", "typings"]
 }

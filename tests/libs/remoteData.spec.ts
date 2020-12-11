@@ -11,7 +11,7 @@ import {
     isFailureAny,
     isLoadingAny,
     isNotAskedAny,
-} from '../../libs/remoteData';
+} from '../../src/libs/remoteData';
 
 describe('Lib `remoteData`', () => {
     test('method `success`', () => {

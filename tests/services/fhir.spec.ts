@@ -1,7 +1,7 @@
 import { AxiosTransformer } from 'axios';
 import { Bundle, Patient, Practitioner } from 'shared/src/contrib/aidbox';
 
-import { success } from '../../libs/remoteData';
+import { success } from '../../src/libs/remoteData';
 import {
     create,
     createFHIRResource,
@@ -32,10 +32,10 @@ import {
     applyFHIRService,
     applyFHIRServices,
     transformToBundleEntry,
-} from '../fhir';
-import { service } from '../service';
+} from '../../src/services/fhir';
+import { service } from '../../src/services/service';
 
-jest.mock('../service', () => {
+jest.mock('../../src/services/service', () => {
     return { service: jest.fn(() => Promise.resolve(success('data'))) };
 });
 

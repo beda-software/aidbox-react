@@ -1,14 +1,14 @@
 import { act, renderHook } from '@testing-library/react-hooks';
 import { Bundle } from 'shared/src/contrib/aidbox';
 
-import { success } from '../../libs/remoteData';
-import { getFHIRResources } from '../../services/fhir';
-import { SearchParams } from '../../services/search';
-import { usePager } from '../pager';
-import { useService } from '../service';
+import { usePager } from '../../src/hooks/pager';
+import { useService } from '../../src/hooks/service';
+import { success } from '../../src/libs/remoteData';
+import { getFHIRResources } from '../../src/services/fhir';
+import { SearchParams } from '../../src/services/search';
 
-jest.mock('../../services/fhir', () => ({ getFHIRResources: jest.fn() }));
-jest.mock('../service', () => ({ useService: jest.fn() }));
+jest.mock('../../src/services/fhir', () => ({ getFHIRResources: jest.fn() }));
+jest.mock('../../src/hooks/service', () => ({ useService: jest.fn() }));
 
 interface checkPageParameters {
     callNumber: number;
