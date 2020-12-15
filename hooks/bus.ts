@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
 export interface EventAction {
-    type: string;
+    type: unknown;
 }
 
 type Callback<T extends EventAction> = (e: T) => void;
