@@ -1,34 +1,34 @@
 import { useEffect } from 'react';
 
-interface EventAction {
+export interface EventAction {
     type: string;
-    [key: string]: any;
 }
 
-type Callback = (e: EventAction) => void;
+type Callback<T extends EventAction> = (e: T) => void;
 
 const subscribers = new Map();
 
-const subscribe = (type: string, callback: Callback) => {
+function subscribe<T extends EventAction>(type: T['type'], callback: Callback<T>) {
     if (type === undefined || type === null) return;
     if (callback === undefined || callback === null) return;
 
     if (!subscribers.has(type)) subscribers.set(type, new Set());
     subscribers.get(type).add(callback);
-};
+}
 
-const unsubscribe = (type: string, callback: Callback) => {
+function unsubscribe<T extends EventAction>(type: T['type'], callback: Callback<T>) {
     if (!subscribers.has(type)) return;
     if (callback === undefined || callback === null) return;
 
     subscribers.get(type).delete(callback);
 
     if (subscribers.get(type).size === 0) subscribers.delete(type);
-};
+}
 
-export const dispatch = (action: EventAction) => {
-    let { type } = action;
-    if (typeof action === 'string') type = action;
+type Dispatch<T extends EventAction> = (action: T) => void;
+
+function dispatch<T extends EventAction>(action: T) {
+    const type: T['type'] = action.type;
 
     if (!subscribers.has(type)) return;
 
@@ -39,17 +39,15 @@ export const dispatch = (action: EventAction) => {
     // It is not clear why it happens,
     // conversion to array did a trick
     // however it may only hide a real problem.
-    const data = Array.from<Callback>(subscribers.get(type));
-    data.forEach((callback: Callback) => {
-        if (typeof action === 'string') {
-            callback({ type });
-        } else {
-            callback(action);
-        }
+    const data = Array.from<Callback<T>>(subscribers.get(type));
+    data.forEach((callback: Callback<T>) => {
+        callback(action);
     });
-};
+}
 
-export const bus = (type: string, callback: Callback, deps: Array<any> = []) => {
+type UseBus<T extends EventAction> = (type: T['type'], callback: Callback<T>, deps: Array<any>) => Dispatch<T>;
+
+function useBus<T extends EventAction>(type: T['type'], callback: Callback<T>, deps: Array<any> = []) {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     useEffect(() => {
         subscribe(type, callback);
@@ -61,4 +59,35 @@ export const bus = (type: string, callback: Callback, deps: Array<any> = []) => 
     }, deps);
 
     return dispatch;
-};
+}
+
+export function createBus<T extends EventAction>() {
+    const useBusTyped: UseBus<T> = useBus;
+    const dispatchTyped: Dispatch<T> = dispatch;
+    return {
+        useBus: useBusTyped,
+        dispatch: dispatchTyped,
+    };
+}
+
+// Example of usage
+// interface Inc extends EventAction{
+//     type: 'inc',
+// }
+
+// interface Dec extends EventAction{
+//     type: 'dec',
+// }
+
+// type Event = Inc|Dec
+
+// const b = createBus<Event>()
+
+// //ok
+// b.dispatch({type: 'inc'})
+
+// //ok
+// b.dispatch({type: 'dec'})
+
+// //type error
+// b.dispatch({type: 'foo'})
