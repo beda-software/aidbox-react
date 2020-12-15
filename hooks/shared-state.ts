@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { uuid4 } from '../utils/uuid';
-import { bus, dispatch } from './bus';
+import { createBus, EventAction } from './bus';
 
 export interface StateManager<S> {
     getSharedState: () => S;
@@ -8,9 +8,20 @@ export interface StateManager<S> {
     useSharedState: () => [S, (s: S) => void];
 }
 
-export function createSharedState<S>(initial: S): StateManager<S> {
+interface SyncAction<S> extends EventAction {
+    s: S;
+}
+
+export class SharedStateInitializationError extends Error {
+    constructor(message?: string) {
+        super(message);
+    }
+}
+
+export function createSharedState<S>(initial?: S): StateManager<S> {
     const uniqBus = uuid4();
-    let mutableState: S = initial;
+    const { useBus, dispatch } = createBus<SyncAction<S>>();
+    let mutableState: S | undefined = initial;
     const setter = (s: S) => {
         mutableState = s;
         dispatch({ type: uniqBus, s });
@@ -18,10 +29,18 @@ export function createSharedState<S>(initial: S): StateManager<S> {
 
     return {
         setSharedState: setter,
-        getSharedState: () => mutableState,
+        getSharedState: () => {
+            if (typeof mutableState === 'undefined') {
+                throw new SharedStateInitializationError();
+            }
+            return mutableState;
+        },
         useSharedState: () => {
-            const [state, setState] = useState<S>(mutableState);
-            bus(
+            const [state, setState] = useState<S | undefined>(mutableState);
+            if (typeof state === 'undefined') {
+                throw new SharedStateInitializationError();
+            }
+            useBus(
                 uniqBus,
                 ({ s }) => {
                     setState(s);
