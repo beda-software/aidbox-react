@@ -6,7 +6,10 @@ export const FHIRDateTimeFormat = 'YYYY-MM-DDTHH:mm:ss[Z]';
 
 export const formatFHIRTime = (date: Date | moment.Moment) => moment(date).format(FHIRTimeFormat);
 export const formatFHIRDate = (date: Date | moment.Moment) => moment(date).format(FHIRDateFormat);
-export const formatFHIRDateTime = (date: Date | moment.Moment) => moment(date).utc().format(FHIRDateTimeFormat);
+export const formatFHIRDateTime = (date: Date | moment.Moment) =>
+    moment(date)
+        .utc()
+        .format(FHIRDateTimeFormat);
 
 export const parseFHIRTime = (date: string) => moment(date, FHIRTimeFormat);
 export const parseFHIRDate = (date: string) => moment(date, FHIRDateFormat);

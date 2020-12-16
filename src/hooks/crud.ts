@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { AidboxResource } from 'shared/src/contrib/aidbox';
 
-import { AidboxResource } from 'src/contrib/aidbox';
 import { failure, isFailure, isSuccess, loading, notAsked, RemoteData, success } from '../libs/remoteData';
 import {
     deleteFHIRResource,
@@ -25,11 +25,14 @@ export function useCRUD<T extends AidboxResource>(
 ): [RemoteData<T>, CRUDManager<T>] {
     const [remoteData, setRemoteData] = useState<RemoteData<T>>(notAsked);
 
-    const makeDefaultResource = () => ({
-        resourceType,
-        ...(id && getOrCreate ? { id } : {}),
-        ...defaultResource,
-    });
+    const makeDefaultResource = useCallback(
+        () => ({
+            resourceType,
+            ...(id && getOrCreate ? { id } : {}),
+            ...defaultResource,
+        }),
+        [resourceType, defaultResource, id, getOrCreate]
+    );
 
     useEffect(() => {
         (async () => {
@@ -45,7 +48,7 @@ export function useCRUD<T extends AidboxResource>(
                 setRemoteData(success(makeDefaultResource() as T));
             }
         })();
-    }, []);
+    }, [getOrCreate, id, makeDefaultResource, resourceType]);
 
     return [
         remoteData,

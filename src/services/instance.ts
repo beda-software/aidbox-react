@@ -1,4 +1,5 @@
 import axios from 'axios';
+
 import { Token } from './token';
 
 const flatten = (list: Array<any>): Array<any> =>

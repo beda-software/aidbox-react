@@ -1,5 +1,4 @@
-import { success, failure, notAsked, loading } from '../../libs/remoteData';
-
+import { success, failure, notAsked, loading } from '../../src/libs/remoteData';
 import {
     service,
     mapFailure,
@@ -12,7 +11,7 @@ import {
     sequenceMap,
     resolveArray,
     PromiseRemoteDataResultMap,
-} from '../../services/service';
+} from '../../src/services/service';
 
 describe('Service `service`', () => {
     interface TransformedData<T> {

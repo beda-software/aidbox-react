@@ -3,9 +3,9 @@
         "target": "es5",
         "module": "es2015",
         "lib": ["dom", "es2015", "es2016", "es2017"],
-        "baseUrl": ".",
+        "baseUrl": "./src",
         "paths": {
-          "src/contrib/aidbox": ["./__tests__/typings/src/contrib/aidbox"]
+            "shared/src/contrib/aidbox": ["../typings/contrib/aidbox"]
         },
         "sourceMap": true,
         "outDir": "./lib",
@@ -30,6 +30,6 @@
         "isolatedModules": true,
         "noEmit": false
     },
-    "include": ["services", "hooks", "libs", "utils"],
-    "exclude": ["node_modules", "__tests__"]
+    "include": ["src"],
+    "exclude": ["node_modules", "tests", "typings"]
 }

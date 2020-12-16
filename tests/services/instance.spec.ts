@@ -4,7 +4,7 @@ import {
     setInstanceBaseURL,
     setInstanceToken,
     resetInstanceToken,
-} from '../../services/instance';
+} from '../../src/services/instance';
 
 describe('Service `instance`', () => {
     test('method `setInstanceBaseURL`', () => {

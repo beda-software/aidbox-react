@@ -4,7 +4,7 @@ import {
     formatError,
     extractErrorDescription,
     extractErrorCode,
-} from '../../utils/error';
+} from '../../src/utils/error';
 
 describe('Util `tests`', () => {
     describe('method `isOperationOutcome`', () => {

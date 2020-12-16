@@ -7,7 +7,7 @@ import {
     parseFHIRDateTime,
     extractFHIRDate,
     extractFHIRTime,
-} from '../../utils/date';
+} from '../../src/utils/date';
 
 describe('Util `tests`', () => {
     describe(`parse and format`, () => {

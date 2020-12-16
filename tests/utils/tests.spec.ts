@@ -1,10 +1,11 @@
-import { ensure, login, getUserInfo, getToken, withRootAccess, LoginService } from '../../utils/tests';
-import { service } from '../../services/service';
-import { axiosInstance } from '../../services/instance';
-import { success, failure } from '../../libs/remoteData';
-import { User } from 'src/contrib/aidbox';
+import { User } from 'shared/src/contrib/aidbox';
 
-jest.mock('../../services/service', () => ({ service: jest.fn() }));
+import { success, failure } from '../../src/libs/remoteData';
+import { axiosInstance } from '../../src/services/instance';
+import { service } from '../../src/services/service';
+import { ensure, login, getUserInfo, getToken, withRootAccess, LoginService } from '../../src/utils/tests';
+
+jest.mock('../../src/services/service', () => ({ service: jest.fn() }));
 
 describe('Util `tests`', () => {
     const user: User = {

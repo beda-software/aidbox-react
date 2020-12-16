@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/beda-software/aidbox-react.svg?branch=master)](https://travis-ci.org/beda-software/aidbox-react) [![Coverage Status](https://coveralls.io/repos/github/beda-software/aidbox-react/badge.svg?branch=master)](https://coveralls.io/github/beda-software/aidbox-react?branch=master)
 
 # Install
+
 Clone this repository into `src/contrib/aidbox-react`
 and provide type definitions for aidbox in `src/contrib/aidbox`
 
@@ -12,20 +13,20 @@ We consider service as a function that returns `RemoteDataResult<S, F>` (`Remote
 
 ## Available services
 
-* service({...axiosConfig})
-* FHIR-specific:
-  * getFHIRResource(reference)
-  * findFHIRResource(resourceType, params)
-  * getFHIRResources(resourceType, params)
-  * saveFHIRResource(resource)
-  * saveFHIRResources(resources, bundleType)
-  * deleteFHIRResource(resources)
-
+-   service({...axiosConfig})
+-   FHIR-specific:
+    -   getFHIRResource(reference)
+    -   findFHIRResource(resourceType, params)
+    -   getFHIRResources(resourceType, params)
+    -   saveFHIRResource(resource)
+    -   saveFHIRResources(resources, bundleType)
+    -   deleteFHIRResource(resources)
 
 ## Available hooks
-* useService(serviceFn)
-* usePager(resourceType, resourcesOnPage?, searchParams?)
-* useCRUD(resourceType, id?, getOrCreate?, defaultResource?) - WIP
+
+-   useService(serviceFn)
+-   usePager(resourceType, resourcesOnPage?, searchParams?)
+-   useCRUD(resourceType, id?, getOrCreate?, defaultResource?) - WIP
 
 # Usage
 
@@ -35,10 +36,11 @@ And use hooks and services
 # Examples
 
 ## Pager hook
+
 ```typescript jsx
 import * as React from 'react';
 
-import { User } from 'src/contrib/aidbox';
+import { User } from 'shared/src/contrib/aidbox';
 import { usePager } from 'src/contrib/aidbox-react/services/service';
 import { isLoading, isSuccess } from 'src/contrib/aidbox-react/libs/remoteData';
 import { extractBundleResources } from 'src/contrib/aidbox-react/services/fhir';
@@ -68,14 +70,14 @@ export function UserList(props: {}) {
 }
 ```
 
-
 ## CRUD hook
+
 ```typescript jsx
 import * as React from 'react';
 
 import { useCRUD } from 'src/contrib/aidbox-react/hooks/crud';
 import { isLoading, isSuccess } from 'src/contrib/aidbox-react/libs/remoteData';
-import { Patient } from 'src/contrib/aidbox';
+import { Patient } from 'shared/src/contrib/aidbox';
 
 export function UserList(props: {}) {
     const [resourceResponse, crudManager] = useCRUD<Patient>('Patient', 'toggle', true, {
