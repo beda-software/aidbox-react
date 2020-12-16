@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-export interface BaseAction {
+interface BaseAction {
     type: unknown;
 }
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 import { uuid4 } from '../utils/uuid';
-import { createBus, EventAction } from './bus';
+import { createBus } from './bus';
 
 export interface StateManager<S> {
     getSharedState: () => S;
@@ -9,7 +9,8 @@ export interface StateManager<S> {
     useSharedState: () => [S, (s: S) => void];
 }
 
-interface SyncAction<S> extends EventAction {
+interface SyncAction<S> {
+    type: string;
     s: S;
 }
 
