@@ -1,6 +1,6 @@
 import { User } from 'shared/src/contrib/aidbox';
 
-import { isSuccess, RemoteData, RemoteDataResult } from '../libs/remoteData';
+import { isFailure, isSuccess, RemoteData, RemoteDataResult } from '../libs/remoteData';
 import { axiosInstance, resetInstanceToken, setInstanceToken } from '../services/instance';
 import { service } from '../services/service';
 import { Token } from '../services/token';
@@ -24,6 +24,13 @@ export function ensure<R>(result: RemoteData<R>): R {
         return result.data;
     }
     throw new Error(`Network error ${JSON.stringify(result)}`);
+}
+
+export function investigate<R = any>(result: RemoteData<unknown, R>): R {
+    if (isFailure(result)) {
+        return result.error;
+    }
+    throw new Error(`Nothing to investigate for ${JSON.stringify(result)}`);
 }
 
 export async function getToken(user: User, loginService: LoginService): Promise<Token> {
