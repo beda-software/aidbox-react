@@ -1,7 +1,7 @@
-
-import { isFailure, isLoading, isNotAsked, isSuccess, RemoteData } from 'aidbox-react/src/libs/remoteData';
-import { formatError } from 'aidbox-react/src/utils/error';
 import React from 'react';
+
+import { isFailure, isLoading, isNotAsked, isSuccess, RemoteData } from '../../libs/remoteData';
+import { formatError } from '../../utils/error';
 
 interface RenderConfig<E = any> {
     renderFailure?: (error: E) => React.ReactElement;
@@ -36,7 +36,6 @@ export function RenderRemoteData<S, E = any>(props: RenderRemoteDataProps<S, E>)
         return children(remoteData.data);
     } else {
         const n: never = remoteData;
-
         throw new Error(n);
     }
 }
