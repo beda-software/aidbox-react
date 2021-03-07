@@ -37,7 +37,7 @@ And use hooks and services
 
 ## Pager hook
 
-```typescript jsx
+```TSX
 import * as React from 'react';
 
 import { User } from 'shared/src/contrib/aidbox';
@@ -72,7 +72,7 @@ export function UserList(props: {}) {
 
 ## CRUD hook
 
-```typescript jsx
+```TSX
 import * as React from 'react';
 
 import { useCRUD } from 'src/contrib/aidbox-react/hooks/crud';
