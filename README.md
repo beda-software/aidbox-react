@@ -179,6 +179,94 @@ if (isFailure(saveResponse)) {
 }
 ```
 
+### createFHIRResource(resource)
+Creates resource via `POST` command.
+The difference with `saveFHIRResource` is that `createFHIRResource` always use `POST`, even if resource has `id` field.
+
+```TypeScript
+const resource = {
+    id: '1',
+    resourceType: 'Patient',
+};
+
+await createFHIRResource(resource);
+```
+
+### updateFHIRResource(resource, params)
+Updates resource using `PUT` request.
+
+It's required to have either resource's id or pass `params`.
+
+```TypeScript
+const resource = {
+    resourceType: 'Patient',
+    name: [{text: 'Alex'}]
+};
+const searchParams = { identifier: 'alex-1' };
+
+const updateResponse = await updateFHIRResource(resource, searchParams);
+```
+
+### patchFHIRResource(resource, params)
+Use `PATCH` method to patch a resource.
+
+It's required to have either resource's id or pass `params`.
+
+```TypeScript
+const resource = {
+    resourceType: 'Patient',
+    name: [{text: 'Jennifer'}],
+    gender: 'female'
+};
+
+const createResponse = await createFHIRResource(resource);
+if (isSuccess(createResponse)) {
+    const patchResponse = await patchFHIRResource({
+        id: createResponse.data.id,
+        name: [{text: 'Monica'}]
+    });
+}
+```
+
+### saveFHIRResources(resources, bundleType)
+Save an array of resources using `POST` request.
+
+Method for every resource will be either `PUT` (if resource's id presented) or
+
+```TypeScript
+const bundleResponse = await saveFHIRResources([
+    {
+        id: 'jennifer-1',
+        resourceType: 'Patient',
+        name: [{text: 'Jennifer'}]
+    },
+    {
+        resourceType: 'Patient',
+        name: [{text: 'Monica'}]
+    }
+], 'transaction');
+```
+
+### deleteFHIRResource(resources)
+Actually it doesn't delete a resource, just mark it as deleted by altering its status (see `inactiveMapping` list in `fhir.ts`).
+
+```TypeScript
+await deleteFHIRResource(makeReference('Patient', 'patient-id'));
+```
+
+### forceDeleteFHIRResource(resource)
+Deletes resource by calling `DELETE` method.
+
+```TypeScript
+const createResponse = await createFHIRResource({
+    resourceType: 'Patient',
+    name: [{text: 'Max'}]
+});
+if (isSuccess(createResponse)) {
+    const deleteResource = await forceDeleteFHIRResource(makeReference('Patient', createResponse.data.id));
+}
+```
+
 ## Available hooks
 
 -   useService(serviceFn)
