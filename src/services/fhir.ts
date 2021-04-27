@@ -85,8 +85,8 @@ function getInactiveSearchParam(resourceType: string) {
     return {};
 }
 
-export async function createFHIRResource(
-    resource: AidboxResource,
+export async function createFHIRResource<R extends AidboxResource>(
+    resource: R,
     searchParams?: SearchParams
 ): Promise<RemoteDataResult<any>> {
     return service(create(resource, searchParams));
@@ -102,7 +102,7 @@ export function create<R extends AidboxResource>(resource: R, searchParams?: Sea
 }
 
 export async function updateFHIRResource<R extends AidboxResource>(
-    resource: AidboxReference<R>,
+    resource: R,
     searchParams?: SearchParams
 ): Promise<RemoteDataResult<R>> {
     return service(update(resource, searchParams));
