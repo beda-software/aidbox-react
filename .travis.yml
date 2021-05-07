@@ -7,13 +7,6 @@ node_js:
 install:
   - npm install
 
-stages:
-  - test
-  - coverage
-
-test:
-  - npm run lint
-
 coverage:
   script: npm run coverage
   on:
