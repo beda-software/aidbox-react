@@ -16,6 +16,12 @@ interface InactiveMapping {
     [resourceType: string]: InactiveMappingItem;
 }
 
+// This type-wrapper is used to wrap AidboxResource to make `id` attr required
+// It's needed when we make requests to the FHIR server - initially all resources
+// have id non-mandatory, but after request (GET/POST etc) the returned resource always
+// has id.
+export type WithId<T extends AidboxResource> = T & Required<Pick<T, 'id'>>;
+
 const inactiveMapping: InactiveMapping = {
     DocumentReference: {
         searchField: 'status',
@@ -88,7 +94,7 @@ function getInactiveSearchParam(resourceType: string) {
 export async function createFHIRResource<R extends AidboxResource>(
     resource: R,
     searchParams?: SearchParams
-): Promise<RemoteDataResult<any>> {
+): Promise<RemoteDataResult<WithId<R>>> {
     return service(create(resource, searchParams));
 }
 
@@ -104,7 +110,7 @@ export function create<R extends AidboxResource>(resource: R, searchParams?: Sea
 export async function updateFHIRResource<R extends AidboxResource>(
     resource: R,
     searchParams?: SearchParams
-): Promise<RemoteDataResult<R>> {
+): Promise<RemoteDataResult<WithId<R>>> {
     return service(update(resource, searchParams));
 }
 
@@ -134,7 +140,7 @@ export function update<R extends AidboxResource>(resource: R, searchParams?: Sea
 
 export async function getFHIRResource<R extends AidboxResource>(
     reference: AidboxReference<R>
-): Promise<RemoteDataResult<R>> {
+): Promise<RemoteDataResult<WithId<R>>> {
     return service(get(reference));
 }
 
@@ -149,7 +155,7 @@ export async function getFHIRResources<R extends AidboxResource>(
     resourceType: R['resourceType'],
     searchParams: SearchParams,
     extraPath?: string
-): Promise<RemoteDataResult<Bundle<R>>> {
+): Promise<RemoteDataResult<Bundle<WithId<R>>>> {
     return service(list(resourceType, searchParams, extraPath));
 }
 
@@ -157,7 +163,7 @@ export async function getAllFHIRResources<R extends AidboxResource>(
     resourceType: string,
     params: SearchParams,
     extraPath?: string
-) {
+): Promise<RemoteDataResult<Bundle<WithId<R>>>> {
     const resultBundleResponse = await getFHIRResources<R>(resourceType, params, extraPath);
 
     if (isFailure(resultBundleResponse)) {
@@ -206,7 +212,7 @@ export async function findFHIRResource<R extends AidboxResource>(
     resourceType: R['resourceType'],
     params: SearchParams,
     extraPath?: string
-): Promise<RemoteDataResult<R>> {
+): Promise<RemoteDataResult<WithId<R>>> {
     return await service(find(resourceType, params, extraPath));
 }
 
@@ -233,7 +239,7 @@ export function find<R extends AidboxResource>(
     };
 }
 
-export async function saveFHIRResource<R extends AidboxResource>(resource: R): Promise<RemoteDataResult<R>> {
+export async function saveFHIRResource<R extends AidboxResource>(resource: R): Promise<RemoteDataResult<WithId<R>>> {
     return service(save(resource));
 }
 
@@ -251,7 +257,7 @@ export function save<R extends AidboxResource>(resource: R): AxiosRequestConfig 
 export async function saveFHIRResources<R extends AidboxResource>(
     resources: R[],
     bundleType: 'transaction' | 'batch'
-): Promise<RemoteDataResult<Bundle<R>>> {
+): Promise<RemoteDataResult<Bundle<WithId<R>>>> {
     return service({
         method: 'POST',
         url: '/',
@@ -280,7 +286,7 @@ type NullableRecursivePartial<T> = {
 export async function patchFHIRResource<R extends AidboxResource>(
     resource: NullableRecursivePartial<R> & Required<Pick<R, 'id' | 'resourceType'>>,
     searchParams?: SearchParams
-): Promise<RemoteDataResult<R>> {
+): Promise<RemoteDataResult<WithId<R>>> {
     return service(patch(resource, searchParams));
 }
 
@@ -310,7 +316,7 @@ export function patch<R extends AidboxResource>(
 
 export async function deleteFHIRResource<R extends AidboxResource>(
     resource: AidboxReference<R>
-): Promise<RemoteDataResult<R>> {
+): Promise<RemoteDataResult<WithId<R>>> {
     return service(markAsDeleted(resource));
 }
 
@@ -332,7 +338,7 @@ export function markAsDeleted<R extends AidboxResource>(resource: AidboxReferenc
 
 export async function forceDeleteFHIRResource<R extends AidboxResource>(
     resource: AidboxReference<R>
-): Promise<RemoteDataResult<R>> {
+): Promise<RemoteDataResult<WithId<R>>> {
     return service(forceDelete(resource.resourceType, resource.id));
 }
 
@@ -444,8 +450,10 @@ export function getConcepts(valueSetId: string, params?: SearchParams): Promise<
     });
 }
 
-export async function applyFHIRService<T = any, F = any>(request: AxiosRequestConfig): Promise<RemoteDataResult<T, F>> {
-    return service<T, F>(request);
+export async function applyFHIRService<T extends AidboxResource, F = any>(
+    request: AxiosRequestConfig
+): Promise<RemoteDataResult<WithId<T>, F>> {
+    return service<WithId<T>, F>(request);
 }
 
 const toCamelCase = (str: string): string => {
@@ -481,8 +489,8 @@ export function transformToBundleEntry<R extends AidboxResource>(config: AxiosRe
 export async function applyFHIRServices<T extends AidboxResource, F = any>(
     requests: Array<AxiosRequestConfig>,
     type: 'transaction' | 'batch' = 'transaction'
-): Promise<RemoteDataResult<Bundle<T>, F>> {
-    return service<Bundle<T>, F>({
+): Promise<RemoteDataResult<Bundle<WithId<T>>, F>> {
+    return service<Bundle<WithId<T>>, F>({
         method: 'POST',
         url: '/',
         data: {
