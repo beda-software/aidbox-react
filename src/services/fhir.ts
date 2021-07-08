@@ -1,7 +1,7 @@
 import { AxiosRequestConfig } from 'axios';
 import { AidboxReference, AidboxResource, ValueSet, Bundle, BundleEntry, id } from 'shared/src/contrib/aidbox';
 
-import { isFailure, RemoteDataResult, success } from '../libs/remoteData';
+import { isFailure, RemoteDataResult, success, failure } from '../libs/remoteData';
 import { buildQueryParams } from './instance';
 import { SearchParams } from './search';
 import { service } from './service';
@@ -190,7 +190,10 @@ export async function getAllFHIRResources<R extends AidboxResource>(
             return response;
         }
 
-        resultBundle = { ...response.data, entry: [...resultBundle.entry!, ...response.data.entry] };
+        resultBundle = {
+            ...response.data,
+            entry: [...resultBundle.entry!, ...response.data.entry],
+        };
     }
 
     return success(resultBundle);
@@ -213,30 +216,24 @@ export async function findFHIRResource<R extends AidboxResource>(
     params: SearchParams,
     extraPath?: string
 ): Promise<RemoteDataResult<WithId<R>>> {
-    return await service(find(resourceType, params, extraPath));
-}
+    const response = await getFHIRResources<R>(resourceType, params, extraPath);
 
-export function find<R extends AidboxResource>(
-    resourceType: R['resourceType'],
-    params: SearchParams,
-    extraPath?: string
-): AxiosRequestConfig {
-    return {
-        method: 'GET',
-        url: extraPath ? `/${resourceType}/${extraPath}` : `/${resourceType}`,
-        params: { ...params, ...getInactiveSearchParam(resourceType) },
-        transformResponse: (resp: string) => {
-            const data: Bundle<R> = JSON.parse(resp);
-            const resources = data.entry!;
-            if (resources.length === 1) {
-                return resources[0].resource!;
-            } else if (resources.length === 0) {
-                throw new Error('No resources found');
-            } else {
-                throw new Error('Too many resources found');
-            }
-        },
-    };
+    if (isFailure(response)) {
+        return response;
+    }
+
+    const resources = extractBundleResources(response.data)[resourceType] as WithId<R>[];
+
+    if (resources.length === 1) {
+        return success(resources[0]);
+    } else if (resources.length === 0) {
+        return failure({ error_description: 'No resources found', error: 'no_resources_found' });
+    } else {
+        return failure({
+            error_description: 'Too many resources found',
+            error: 'too_many_resources_found',
+        });
+    }
 }
 
 export async function saveFHIRResource<R extends AidboxResource>(resource: R): Promise<RemoteDataResult<WithId<R>>> {

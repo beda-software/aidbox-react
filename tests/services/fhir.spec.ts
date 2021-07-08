@@ -1,7 +1,6 @@
-import { AxiosTransformer } from 'axios';
 import { Bundle, Patient, Practitioner } from 'shared/src/contrib/aidbox';
 
-import { success } from '../../src/libs/remoteData';
+import { failure, success } from '../../src/libs/remoteData';
 import {
     create,
     createFHIRResource,
@@ -9,7 +8,6 @@ import {
     getFHIRResource,
     list,
     getFHIRResources,
-    find,
     findFHIRResource,
     update,
     updateFHIRResource,
@@ -36,12 +34,13 @@ import {
 import { service } from '../../src/services/service';
 
 jest.mock('../../src/services/service', () => {
-    return { service: jest.fn(() => Promise.resolve(success('data'))) };
+    return { service: jest.fn() };
 });
 
 describe('Service `fhir`', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        (<jest.Mock>service).mockImplementation(() => Promise.resolve(success('data')));
     });
 
     describe('method `create`', () => {
@@ -361,74 +360,75 @@ describe('Service `fhir`', () => {
         });
     });
 
-    describe('method `find`', () => {
-        test('has correct behavior', async () => {
-            const params = { id: 1 };
-            const resourceType = 'Patient';
-
-            const axiosRequestConfig = find(resourceType, params);
-            const transformResponse = axiosRequestConfig.transformResponse as AxiosTransformer;
-
-            expect(axiosRequestConfig).toEqual(
-                expect.objectContaining({
-                    method: 'GET',
-                    url: '/' + resourceType,
-                    params: {
-                        'active:not': [false],
-                        id: 1,
-                    },
-                })
-            );
-
-            expect(() => {
-                const response = '';
-                transformResponse(response);
-            }).toThrow();
-
-            expect(() => {
-                const response = '{"entry":[]}';
-                transformResponse(response);
-            }).toThrow();
-
-            const response = '{"entry":[{"resource": "data"}]}';
-            const transformed = transformResponse(response);
-
-            expect(transformed).toBe('data');
-
-            expect(() => {
-                const response = '{"entry":[{"resource": "a"}, {"resource": "b"}]}';
-                transformResponse(response);
-            }).toThrow();
-        });
-
-        test('receive extra path argument', async () => {
-            const params = { id: 1 };
-            const resourceType = 'Patient';
-            const extraPath = 'extraPath';
-
-            expect(find(resourceType, params, extraPath)).toEqual(
-                expect.objectContaining({
-                    method: 'GET',
-                    url: '/' + resourceType + '/' + extraPath,
-                    params: {
-                        'active:not': [false],
-                        id: 1,
-                    },
-                })
-            );
-        });
-    });
-
     describe('method `findFHIRResource`', () => {
-        test('has correct behavior', async () => {
+        test('returns failure when nothing found', async () => {
             const params = { id: 1 };
             const resourceType = 'Patient';
 
-            await findFHIRResource(resourceType, params);
-            const restFindResult = find(resourceType, params);
-            delete restFindResult.transformResponse;
+            (<jest.Mock>service).mockImplementation(() => Promise.resolve(success({ entry: [] })));
 
-            expect(service).toHaveBeenLastCalledWith(expect.objectContaining(restFindResult));
+            const response = await findFHIRResource(resourceType, params);
+            expect(service).toHaveBeenLastCalledWith({
+                method: 'GET',
+                url: `/${resourceType}`,
+                params: { ...params, 'active:not': [false] },
+            });
+            expect(response).toEqual(
+                failure({
+                    error_description: 'No resources found',
+                    error: 'no_resources_found',
+                })
+            );
+        });
+
+        test('returns failure when multiple resources found', async () => {
+            const id = 'patient-id';
+            const params = { _id: id };
+            const resourceType = 'Patient';
+            const resource = { resourceType, id };
+            (<jest.Mock>service).mockImplementation(() =>
+                Promise.resolve(success({ entry: [{ resource }, { resource }] }))
+            );
+
+            const response = await findFHIRResource(resourceType, params);
+            expect(service).toHaveBeenLastCalledWith({
+                method: 'GET',
+                url: `/${resourceType}`,
+                params: { ...params, 'active:not': [false] },
+            });
+            expect(response).toEqual(
+                failure({
+                    error_description: 'Too many resources found',
+                    error: 'too_many_resources_found',
+                })
+            );
+        });
+
+        test('returns success when exactly one resource found', async () => {
+            const id = 'patient-id';
+            const params = { _id: id };
+            const resourceType = 'Patient';
+            const resource = { resourceType, id };
+
+            (<jest.Mock>service).mockImplementation(() =>
+                Promise.resolve(
+                    success({
+                        entry: [
+                            {
+                                resource,
+                            },
+                        ],
+                    })
+                )
+            );
+
+            const response = await findFHIRResource(resourceType, params);
+            expect(service).toHaveBeenLastCalledWith({
+                method: 'GET',
+                url: `/${resourceType}`,
+                params: { ...params, 'active:not': [false] },
+            });
+            expect(response).toEqual(success(resource));
         });
 
         test('receive extra path argument', async () => {
@@ -438,10 +438,11 @@ describe('Service `fhir`', () => {
 
             await findFHIRResource(resourceType, params, extraPath);
 
-            const restFindResult = find(resourceType, params, extraPath);
-            delete restFindResult.transformResponse;
-
-            expect(service).toHaveBeenLastCalledWith(expect.objectContaining(restFindResult));
+            expect(service).toHaveBeenLastCalledWith({
+                method: 'GET',
+                url: `/${resourceType}/${extraPath}`,
+                params: { ...params, 'active:not': [false] },
+            });
         });
     });
 
@@ -627,7 +628,10 @@ describe('Service `fhir`', () => {
 
     describe('method `extractBundleResources`', () => {
         test("extract empty object when there's not entry property", () => {
-            const bundle: Bundle<Patient | Practitioner> = { resourceType: 'Bundle', type: 'searchset' };
+            const bundle: Bundle<Patient | Practitioner> = {
+                resourceType: 'Bundle',
+                type: 'searchset',
+            };
 
             expect(extractBundleResources(bundle).Practitioner).toEqual([]);
             expect(extractBundleResources(bundle).Patient).toEqual([]);

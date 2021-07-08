@@ -67,11 +67,11 @@ export function extractErrorDescription(error: any) {
     }
 
     if (isOperationOutcome(error)) {
-        if (error.issue[0].details?.text) {
-            return error.issue[0].details?.text;
+        if (error.issue?.[0]?.details?.text) {
+            return error.issue[0].details.text;
         }
 
-        if (error.issue[0].diagnostics) {
+        if (error.issue?.[0]?.diagnostics) {
             return error.issue[0].diagnostics;
         }
     }

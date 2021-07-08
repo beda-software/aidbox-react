@@ -83,10 +83,20 @@ describe('Util `tests`', () => {
             expect(extractErrorDescription(error)).toEqual(result);
         });
 
-        test('OperationOutcome', () => {
+        test('OperationOutcome details', () => {
             const error = {
                 resourceType: 'OperationOutcome',
                 issue: [{ code: 'code', details: { text: 'Description' } }],
+            };
+            const result = 'Description';
+
+            expect(extractErrorDescription(error)).toEqual(result);
+        });
+
+        test('OperationOutcome diagnostics', () => {
+            const error = {
+                resourceType: 'OperationOutcome',
+                issue: [{ code: 'code', diagnostics: 'Description' }],
             };
             const result = 'Description';
 

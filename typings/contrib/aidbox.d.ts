@@ -162,4 +162,5 @@ export interface OperationOutcomeIssue {
     details?: {
         text?: string;
     };
+    diagnostics?: text;
 }
