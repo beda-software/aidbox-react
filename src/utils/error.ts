@@ -66,8 +66,14 @@ export function extractErrorDescription(error: any) {
         return baseErrorMapping.network_error;
     }
 
-    if (isOperationOutcome(error) && error.issue[0].details?.text) {
-        return error.issue[0].details?.text;
+    if (isOperationOutcome(error)) {
+        if (error.issue[0].details?.text) {
+            return error.issue[0].details?.text;
+        }
+
+        if (error.issue[0].diagnostics) {
+            return error.issue[0].diagnostics;
+        }
     }
 
     if (isBackendError(error) && error.error_description) {
