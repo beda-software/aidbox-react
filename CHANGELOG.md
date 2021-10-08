@@ -1,3 +1,7 @@
+## 1.3.2
+
+-   Fix build
+
 ## 1.3.0
 
 -   findFHIRResources uses getFHIRResources under the hood
