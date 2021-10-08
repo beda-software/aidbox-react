@@ -11,7 +11,7 @@
         "outDir": "./lib",
         "declaration": true,
         "allowJs": true,
-        "jsx": "preserve",
+        "jsx": "react",
         "moduleResolution": "node",
         "forceConsistentCasingInFileNames": true,
         "noImplicitReturns": true,
