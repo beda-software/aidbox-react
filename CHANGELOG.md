@@ -1,3 +1,7 @@
+## 1.3.3
+
+- Adjust the code for new ts
+
 ## 1.3.2
 
 -   Fix build
