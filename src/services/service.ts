@@ -20,7 +20,7 @@ export async function service<S = any, F = any>(config: AxiosRequestConfig): Pro
         const response = await axiosInstance(config);
 
         return success(response.data);
-    } catch (err) {
+    } catch (err: any) {
         return failure(err.response ? err.response.data : err.message);
     }
 }

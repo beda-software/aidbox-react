@@ -22,7 +22,7 @@ export function useService<S = any, F = any>(
             try {
                 const response: RemoteDataResult<S, F> = await asyncFunction();
                 setRemoteData(response);
-            } catch (err) {
+            } catch (err: any) {
                 setRemoteData(failure(err.response ? err.response.data : err.message));
             }
         })();
