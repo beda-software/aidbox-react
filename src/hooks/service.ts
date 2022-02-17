@@ -3,8 +3,13 @@ import { useEffect, useState, useCallback } from 'react';
 import { loading, notAsked, RemoteData, RemoteDataResult, success, failure, isSuccess } from '../libs/remoteData';
 
 export interface ServiceManager<S, F> {
-    reload: () => Promise<RemoteDataResult<S, F>>;
-    softReload: () => Promise<RemoteDataResult<S, F>>;
+    // `reload` just sends signal to reload
+    reload: () => void;
+    // `reloadAsync` returns Promise and intialize loading from the loading state
+    reloadAsync: () => Promise<RemoteDataResult<S, F>>;
+    // `softReloadAsync` returns Promise and intialize just updates
+    // remoteData with success/failure state without preloading
+    softReloadAsync: () => Promise<RemoteDataResult<S, F>>;
     set: (dataOrFn: S | ((data: S) => S)) => void;
 }
 
@@ -13,17 +18,19 @@ export function useService<S = any, F = any>(
     deps: ReadonlyArray<any> = []
 ): [RemoteData<S, F>, ServiceManager<S, F>] {
     const [remoteData, setRemoteData] = useState<RemoteData<S, F>>(notAsked);
+    const [reloadsCount, setReloadsCount] = useState(0);
+    const reload = useCallback(() => setReloadsCount((x) => x + 1), []);
 
     const load = useCallback(async () => {
         try {
             return await asyncFunction();
-        } catch (err: any) {
+        } catch (err) {
             return failure(err.response ? err.response.data : err.message);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, deps);
 
-    const softReload = useCallback(async () => {
+    const softReloadAsync = useCallback(async () => {
         const response = await load();
         setRemoteData(response);
 
@@ -31,7 +38,7 @@ export function useService<S = any, F = any>(
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [...deps, load]);
 
-    const reload = useCallback(async () => {
+    const reloadAsync = useCallback(async () => {
         setRemoteData(loading);
         const response = await load();
         setRemoteData(response);
@@ -46,13 +53,14 @@ export function useService<S = any, F = any>(
             setRemoteData(await load());
         })();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [...deps, load]);
+    }, [...deps, reloadsCount, load]);
 
     return [
         remoteData,
         {
             reload,
-            softReload,
+            reloadAsync,
+            softReloadAsync,
             set: (dataOrFn: S | ((data: S) => S)) => {
                 if (typeof dataOrFn === 'function') {
                     setRemoteData((rd) => (isSuccess(rd) ? success((dataOrFn as (data: S) => S)(rd.data)) : rd));
