@@ -17,7 +17,7 @@ export function useService<S = any, F = any>(
     const load = useCallback(async () => {
         try {
             return await asyncFunction();
-        } catch (err) {
+        } catch (err: any) {
             return failure(err.response ? err.response.data : err.message);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
