@@ -1,6 +1,10 @@
+## 1.4.0
+
+-   Add softReloadAsync ans reloadAsync to useService manager
+
 ## 1.3.3
 
-- Adjust the code for new ts
+-   Adjust the code for new ts
 
 ## 1.3.2
 
