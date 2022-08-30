@@ -1,3 +1,7 @@
+## 1.5.0
+
+-   Fix useService hook performance
+
 ## 1.4.0
 
 -   Add softReloadAsync ans reloadAsync to useService manager
