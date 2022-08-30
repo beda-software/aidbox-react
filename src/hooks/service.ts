@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 
 import { loading, notAsked, RemoteData, RemoteDataResult, success, failure, isSuccess } from '../libs/remoteData';
 
@@ -24,7 +24,7 @@ export function useService<S = any, F = any>(
     const load = useCallback(async () => {
         try {
             return await asyncFunction();
-        } catch (err: any) {
+        } catch (err) {
             return failure(err.response ? err.response.data : err.message);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -55,19 +55,24 @@ export function useService<S = any, F = any>(
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [...deps, reloadsCount, load]);
 
-    return [
-        remoteData,
-        {
+    const set = useCallback((dataOrFn: S | ((data: S) => S)) => {
+        if (typeof dataOrFn === 'function') {
+            setRemoteData((rd) => (isSuccess(rd) ? success((dataOrFn as (data: S) => S)(rd.data)) : rd));
+        } else {
+            setRemoteData(success(dataOrFn));
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, deps);
+
+    const manager = useMemo(
+        () => ({
             reload,
             reloadAsync,
             softReloadAsync,
-            set: (dataOrFn: S | ((data: S) => S)) => {
-                if (typeof dataOrFn === 'function') {
-                    setRemoteData((rd) => (isSuccess(rd) ? success((dataOrFn as (data: S) => S)(rd.data)) : rd));
-                } else {
-                    setRemoteData(success(dataOrFn));
-                }
-            },
-        },
-    ];
+            set,
+        }),
+        [reload, reloadAsync, softReloadAsync, set]
+    );
+
+    return [remoteData, manager];
 }
