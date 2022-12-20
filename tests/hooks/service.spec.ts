@@ -16,7 +16,7 @@ describe('Hook `useService`', () => {
             current: [firstRemoteData],
         } = result;
 
-        expect(spyEffect).toHaveBeenLastCalledWith(expect.anything(), [0]);
+        expect(spyEffect).toHaveBeenLastCalledWith(expect.anything(), [0, expect.anything()]);
         expect(firstRemoteData).toEqual(loading);
 
         await waitForNextUpdate();
@@ -25,7 +25,7 @@ describe('Hook `useService`', () => {
             current: [secondRemoteData],
         } = result;
 
-        expect(spyEffect).toHaveBeenLastCalledWith(expect.anything(), [0]);
+        expect(spyEffect).toHaveBeenLastCalledWith(expect.anything(), [0, expect.anything()]);
         expect(secondRemoteData).toEqual(dataSuccess);
     });
 
@@ -40,7 +40,7 @@ describe('Hook `useService`', () => {
             current: [firstRemoteData, { reload }],
         } = result;
 
-        expect(spyEffect).toHaveBeenLastCalledWith(expect.anything(), [1, 2, 0]);
+        expect(spyEffect).toHaveBeenLastCalledWith(expect.anything(), [1, 2, 0, expect.anything()]);
         expect(firstRemoteData).toEqual(dataSuccess);
 
         act(() => {
@@ -51,7 +51,7 @@ describe('Hook `useService`', () => {
             current: [secondRemoteData],
         } = result;
 
-        expect(spyEffect).toHaveBeenLastCalledWith(expect.anything(), [1, 2, 1]);
+        expect(spyEffect).toHaveBeenLastCalledWith(expect.anything(), [1, 2, 1, expect.anything()]);
         expect(secondRemoteData).toEqual(loading);
 
         await waitForNextUpdate();
@@ -70,7 +70,7 @@ describe('Hook `useService`', () => {
         const data = { custom: 'data-new' };
 
         await waitForNextUpdate();
-        expect(spyEffect).toHaveBeenLastCalledWith(expect.anything(), [1, 2, 0]);
+        expect(spyEffect).toHaveBeenLastCalledWith(expect.anything(), [1, 2, 0, expect.anything()]);
         const {
             current: [, { set }],
         } = result;
@@ -84,6 +84,6 @@ describe('Hook `useService`', () => {
         } = result;
 
         expect(remoteData).toEqual(success(data));
-        expect(spyEffect).toHaveBeenLastCalledWith(expect.anything(), [1, 2, 0]);
+        expect(spyEffect).toHaveBeenLastCalledWith(expect.anything(), [1, 2, 0, expect.anything()]);
     });
 });
