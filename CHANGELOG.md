@@ -1,3 +1,7 @@
+## 1.6.0
+
+-   Add a compiled and resolved build as default library import.
+
 ## 1.5.0
 
 -   Fix useService hook performance
