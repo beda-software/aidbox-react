@@ -10,7 +10,7 @@ import { SearchParams } from '../../src/services/search';
 jest.mock('../../src/services/fhir', () => ({ getFHIRResources: jest.fn() }));
 jest.mock('../../src/hooks/service', () => ({ useService: jest.fn() }));
 
-interface checkPageParameters {
+interface CheckPageParameters {
     callNumber: number;
     pageNumber: number;
     searchParams?: SearchParams;
@@ -20,14 +20,13 @@ describe('Hook `usePager`', () => {
     const resourceType = 'Bundle';
     const resourcesOnPage = 2;
 
-    const checkPage = (parameters: checkPageParameters) => {
+    const checkPage = (parameters: CheckPageParameters) => {
         const { callNumber, pageNumber, searchParams = {} } = parameters;
         const [asyncFunction, [pageToLoad]] = (<jest.Mock>useService).mock.calls[callNumber];
 
         asyncFunction();
 
         const [fhirResourceType, fhirSearchParams] = (<jest.Mock>getFHIRResources).mock.calls[callNumber];
-
         expect(pageToLoad).toBe(pageNumber);
         expect(fhirSearchParams).toEqual({ ...searchParams, _count: resourcesOnPage, _page: pageNumber });
         expect(fhirResourceType).toEqual(resourceType);
@@ -80,6 +79,53 @@ describe('Hook `usePager`', () => {
         });
     });
 
+    describe('property `hasPrevious`', () => {
+        test("returns false when there's no previous page", () => {
+            const data = success({ resourceType });
+
+            (<jest.Mock>useService).mockImplementation(() => [data]);
+
+            const { result } = renderHook(() => usePager<Bundle<any>>('Bundle'));
+            const [remoteData, { hasPrevious }] = result.current;
+
+            expect(hasPrevious).toBeFalsy();
+            expect(remoteData).toEqual(data);
+        });
+
+        test("returns true when there's previous page", () => {
+            const data = success({
+                id: 'fakeID',
+                resourceType,
+                link: [
+                    {
+                        relation: 'first',
+                        url: '/EpisodeOfCare?page=1',
+                    },
+                    {
+                        relation: 'next',
+                        url: '/EpisodeOfCare?page=3',
+                    },
+                    {
+                        relation: 'self',
+                        url: '/EpisodeOfCare?page=2',
+                    },
+                    {
+                        relation: 'previous',
+                        url: '/EpisodeOfCare?page=1',
+                    },
+                ],
+            });
+
+            (<jest.Mock>useService).mockImplementation(() => [data]);
+
+            const { result } = renderHook(() => usePager<Bundle<any>>(resourceType, resourcesOnPage, { _page: 2 }));
+            const [remoteData, { hasPrevious }] = result.current;
+
+            expect(hasPrevious).toBeTruthy();
+            expect(remoteData).toEqual(data);
+        });
+    });
+
     test('method `loadNext`', async () => {
         const data = success({
             id: 'fakeID',
@@ -102,6 +148,48 @@ describe('Hook `usePager`', () => {
         });
 
         checkPage({ callNumber: 1, pageNumber: 2, searchParams });
+    });
+
+    test('method `loadPrevious`', async () => {
+        const data = success({
+            id: 'fakeID',
+            resourceType: 'type',
+            link: [
+                {
+                    relation: 'first',
+                    url: '/EpisodeOfCare?page=1',
+                },
+                {
+                    relation: 'next',
+                    url: '/EpisodeOfCare?page=3',
+                },
+                {
+                    relation: 'self',
+                    url: '/EpisodeOfCare?page=2',
+                },
+                {
+                    relation: 'previous',
+                    url: '/EpisodeOfCare?page=1',
+                },
+            ],
+        });
+
+        const searchParams = { a: 1, b: 2 };
+
+        (<jest.Mock>useService).mockImplementation(() => [data]);
+
+        const { result } = renderHook(() => usePager<Bundle<any>>(resourceType, resourcesOnPage, searchParams));
+        const {
+            current: [, { loadPrevious }],
+        } = result;
+
+        checkPage({ callNumber: 0, pageNumber: 1, searchParams });
+
+        act(() => {
+            loadPrevious();
+        });
+
+        checkPage({ callNumber: 1, pageNumber: 0, searchParams });
     });
 
     test('method `reload`', async () => {
