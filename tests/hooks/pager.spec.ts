@@ -174,7 +174,7 @@ describe('Hook `usePager`', () => {
             ],
         });
 
-        const searchParams = { a: 1, b: 2 };
+        const searchParams = { _page: 2 };
 
         (<jest.Mock>useService).mockImplementation(() => [data]);
 
@@ -183,13 +183,53 @@ describe('Hook `usePager`', () => {
             current: [, { loadPrevious }],
         } = result;
 
-        checkPage({ callNumber: 0, pageNumber: 1, searchParams });
+        checkPage({ callNumber: 0, pageNumber: 2, searchParams });
 
         act(() => {
             loadPrevious();
         });
 
-        checkPage({ callNumber: 1, pageNumber: 0, searchParams });
+        checkPage({ callNumber: 1, pageNumber: 1, searchParams });
+    });
+
+    test('method `loadPage`', async () => {
+        const data = success({
+            id: 'fakeID',
+            resourceType: 'type',
+            link: [
+                {
+                    relation: 'first',
+                    url: '/EpisodeOfCare?_page=1',
+                },
+                {
+                    relation: 'self',
+                    url: '/EpisodeOfCare?_page=1',
+                },
+                {
+                    relation: 'next',
+                    url: '/EpisodeOfCare?_page=2',
+                },
+                {
+                    relation: 'last',
+                    url: '/EpisodeOfCare?_page=6',
+                },
+            ],
+        });
+
+        (<jest.Mock>useService).mockImplementation(() => [data]);
+
+        const { result } = renderHook(() => usePager<Bundle<any>>(resourceType, resourcesOnPage));
+        const {
+            current: [, { loadPage }],
+        } = result;
+
+        checkPage({ callNumber: 0, pageNumber: 1 });
+
+        act(() => {
+            loadPage(3);
+        });
+
+        checkPage({ callNumber: 1, pageNumber: 3 });
     });
 
     test('method `reload`', async () => {
