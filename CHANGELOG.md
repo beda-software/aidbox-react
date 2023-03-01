@@ -1,3 +1,7 @@
+## 1.7.0
+
+-   Extend usePager hook with loadPrevious, loadPage, hasPrevious, and currentPage properties.
+
 ## 1.6.0
 
 -   Add a compiled and resolved build as default library import.
