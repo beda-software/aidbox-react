@@ -1,3 +1,7 @@
+## 1.7.1
+
+-   Add an optional refresh_token to the Token interface.
+
 ## 1.7.0
 
 -   Extend usePager hook with loadPrevious, loadPage, hasPrevious, and currentPage properties.
