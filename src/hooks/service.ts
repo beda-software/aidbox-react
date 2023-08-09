@@ -24,7 +24,7 @@ export function useService<S = any, F = any>(
     const load = useCallback(async () => {
         try {
             return await asyncFunction();
-        } catch (err: any) {
+        } catch (err) {
             return failure(err.response ? err.response.data : err.message);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -48,10 +48,19 @@ export function useService<S = any, F = any>(
     }, [...deps, load]);
 
     useEffect(() => {
+        let cancelled = false;
+
         (async () => {
             setRemoteData(loading);
-            setRemoteData(await load());
+            const response = await load();
+            if (!cancelled) {
+                setRemoteData(response);
+            }
         })();
+
+        return () => {
+            cancelled = true;
+        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [...deps, reloadsCount, load]);
 
