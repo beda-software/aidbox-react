@@ -2,7 +2,7 @@ import { act, renderHook } from '@testing-library/react-hooks';
 import React from 'react';
 
 import { useService } from '../../src/hooks/service';
-import { success, loading } from '../../src/libs/remoteData';
+import { success, loading, RemoteDataResult } from '../../src/libs/remoteData';
 
 describe('Hook `useService`', () => {
     const data = { custom: 'data' };
@@ -85,5 +85,28 @@ describe('Hook `useService`', () => {
 
         expect(remoteData).toEqual(success(data));
         expect(spyEffect).toHaveBeenLastCalledWith(expect.anything(), [1, 2, 0, expect.anything()]);
+    });
+
+    test('changing dependencies while loading does not save early requests', async () => {
+        // NOTE: sleepService fetched with delay 100 should be the last result
+        // NOTE: even if first sleepService with delay 500 is resolved
+        const sleepService = jest.fn(
+            (delay: number) =>
+                new Promise<RemoteDataResult>((resolve) => setTimeout(() => resolve(success({ delay })), delay))
+        );
+        const { result, rerender } = renderHook((delay) => useService(() => sleepService(delay), [delay]), {
+            initialProps: 500,
+        });
+
+        // Invoke for the second time with a shorter delay
+        rerender(100);
+
+        const firstPromise = sleepService.mock.results[0].value;
+        const secondPromise = sleepService.mock.results[1].value;
+
+        await firstPromise;
+        await secondPromise;
+
+        expect(result.current[0]).toEqual(success({ delay: 100 }));
     });
 });
