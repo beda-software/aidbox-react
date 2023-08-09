@@ -1,3 +1,7 @@
+## 1.8.0
+
+-   Fix race condition when deps changed in useService hook. #61
+
 ## 1.7.1
 
 -   Add an optional refresh_token to the Token interface.
