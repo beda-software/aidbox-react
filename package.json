@@ -10,7 +10,7 @@
         "prepare": "npm run build"
     },
     "dependencies": {
-        "axios": "^0.21.2",
+        "axios": "^0.28.0",
         "moment": "^2.29.1"
     },
     "devDependencies": {
