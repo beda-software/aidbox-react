@@ -933,6 +933,13 @@
     "@babel/helper-validator-identifier" "^7.19.1"
     to-fast-properties "^2.0.0"
 
+"@beda.software/remote-data@^1.1.3":
+  version "1.1.3"
+  resolved "https://registry.yarnpkg.com/@beda.software/remote-data/-/remote-data-1.1.3.tgz#edd1194a65796fdffcf45235ff0d9463547d8c29"
+  integrity sha512-HlyAELvpRv1xsoXUFeOnpUxSS+jrZ+zRu3bN7yGi2CD+Py5MzIjm3dy+MD41ZvpoFGlF/0IplIb8RXBm/vzHIg==
+  dependencies:
+    axios "^1.6.2"
+
 "@cnakazawa/watch@^1.0.3":
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@cnakazawa/watch/-/watch-1.0.4.tgz#f864ae85004d0fcab6f50be9141c4da368d1656a"
