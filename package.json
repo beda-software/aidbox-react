@@ -1,6 +1,6 @@
 {
     "name": "aidbox-react",
-    "version": "1.8.0",
+    "version": "1.9.0",
     "scripts": {
         "build": "tsc & rollup -c",
         "prebuild": "rimraf lib/* & rimraf dist/*",
@@ -10,7 +10,7 @@
         "prepare": "npm run build"
     },
     "dependencies": {
-        "axios": "^0.21.2",
+        "axios": "^1.6.2",
         "moment": "^2.29.1"
     },
     "devDependencies": {
