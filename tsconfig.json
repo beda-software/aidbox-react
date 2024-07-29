@@ -10,6 +10,7 @@
         "sourceMap": true,
         "outDir": "./lib",
         "declaration": true,
+        "declarationMap": true,
         "allowJs": true,
         "jsx": "react",
         "moduleResolution": "node",
