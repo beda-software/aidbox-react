@@ -1,3 +1,8 @@
+## 1.10.0
+
+-   Update axios version
+-   Use @beda.software/remote-data
+
 ## 1.8.0
 
 -   Fix race condition when deps changed in useService hook. #61
