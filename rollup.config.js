@@ -20,7 +20,7 @@ module.exports = [
                 sourcemap: false,
             },
         ],
-        external: ['axios', 'moment', 'shared/src/contrib/aidbox'],
+        external: ['axios', 'moment', 'shared/src/contrib/aidbox', '@beda.software/remote-data'],
         plugins: [
             resolve({
                 browser: true,
