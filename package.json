@@ -7,7 +7,8 @@
         "coverage": "jest --config=./jest.config.json --coverage --coverageReporters=text-lcov | coveralls",
         "test": "jest --config=./jest.config.json",
         "test:watch": "jest --config=./jest.config.json --watch",
-        "prepare": "npm run build"
+        "prepare": "npm run build",
+        "typecheck": "tsc --noEmit"
     },
     "dependencies": {
         "@beda.software/remote-data": "^1.1.3",
