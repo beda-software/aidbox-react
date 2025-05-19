@@ -28,11 +28,15 @@ export function cleanEmptyValues(data: any): any {
         return cleaned;
     }
 
+    if (typeof data === 'undefined') {
+        return null;
+    }
+
     return data;
 }
 
 function isNull(value: any): boolean {
-    return value === null;
+    return value === null || value === undefined;
 }
 
 export function removeNullsFromDicts(data: any): any {
@@ -48,6 +52,10 @@ export function removeNullsFromDicts(data: any): any {
             }
         }
         return result;
+    }
+
+    if (typeof data === 'undefined') {
+        return null;
     }
 
     return data;
