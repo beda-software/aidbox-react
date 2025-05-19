@@ -71,3 +71,8 @@ describe('removeNullsFromDicts', () => {
         });
     });
 });
+
+describe('combine two cleaning functions', () => {
+    const data = { item: [undefined, { item: undefined }, {}] };
+    expect(cleanEmptyValues(removeNullsFromDicts(data))).toEqual({ item: [null, null, null] });
+});
