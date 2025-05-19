@@ -1,8 +1,8 @@
 import { AxiosRequestConfig } from 'axios';
 import { AidboxReference, AidboxResource, ValueSet, Bundle, BundleEntry, id } from 'shared/src/contrib/aidbox';
-import { cleanEmptyValues, removeNullsFromDicts } from 'utils/fhir';
 
 import { isFailure, RemoteDataResult, success, failure } from '../libs/remoteData';
+import { cleanEmptyValues, removeNullsFromDicts } from '../utils/fhir';
 import { buildQueryParams } from './instance';
 import { SearchParams } from './search';
 import { service } from './service';
@@ -300,7 +300,7 @@ export async function saveFHIRResources<R extends AidboxResource>(
                 const versionId = cleanedResource.meta && cleanedResource.meta.versionId;
 
                 return {
-                    cleanedResource,
+                    resource: cleanedResource,
                     request: {
                         method: cleanedResource.id ? 'PUT' : 'POST',
                         url: `/${cleanedResource.resourceType}${cleanedResource.id ? '/' + cleanedResource.id : ''}`,
