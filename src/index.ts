@@ -10,6 +10,7 @@ export * from './utils/date';
 export * from './utils/error';
 export * from './utils/tests';
 export * from './utils/uuid';
+export * from './utils/fhir';
 
 export * from './hooks/bus';
 export * from './hooks/service';
