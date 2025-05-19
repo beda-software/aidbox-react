@@ -2,6 +2,7 @@ import { AxiosRequestConfig } from 'axios';
 import { AidboxReference, AidboxResource, ValueSet, Bundle, BundleEntry, id } from 'shared/src/contrib/aidbox';
 
 import { isFailure, RemoteDataResult, success, failure } from '../libs/remoteData';
+import { cleanEmptyValues, removeNullsFromDicts } from '../utils/fhir';
 import { buildQueryParams } from './instance';
 import { SearchParams } from './search';
 import { service } from './service';
@@ -93,17 +94,28 @@ function getInactiveSearchParam(resourceType: string) {
 
 export async function createFHIRResource<R extends AidboxResource>(
     resource: R,
-    searchParams?: SearchParams
+    searchParams?: SearchParams,
+    dropNullsFromDicts = true
 ): Promise<RemoteDataResult<WithId<R>>> {
-    return service(create(resource, searchParams));
+    return service(create(resource, searchParams, dropNullsFromDicts));
 }
 
-export function create<R extends AidboxResource>(resource: R, searchParams?: SearchParams): AxiosRequestConfig {
+export function create<R extends AidboxResource>(
+    resource: R,
+    searchParams?: SearchParams,
+    dropNullsFromDicts = true
+): AxiosRequestConfig {
+    let cleanedResource = resource;
+    if (dropNullsFromDicts) {
+        cleanedResource = removeNullsFromDicts(cleanedResource);
+    }
+    cleanedResource = cleanEmptyValues(cleanedResource);
+
     return {
         method: 'POST',
-        url: `/${resource.resourceType}`,
+        url: `/${cleanedResource.resourceType}`,
         params: searchParams,
-        data: resource,
+        data: cleanedResource,
     };
 }
 
@@ -114,23 +126,33 @@ export async function updateFHIRResource<R extends AidboxResource>(
     return service(update(resource, searchParams));
 }
 
-export function update<R extends AidboxResource>(resource: R, searchParams?: SearchParams): AxiosRequestConfig {
+export function update<R extends AidboxResource>(
+    resource: R,
+    searchParams?: SearchParams,
+    dropNullsFromDicts = true
+): AxiosRequestConfig {
+    let cleanedResource = resource;
+    if (dropNullsFromDicts) {
+        cleanedResource = removeNullsFromDicts(cleanedResource);
+    }
+    cleanedResource = cleanEmptyValues(cleanedResource);
+
     if (searchParams) {
         return {
             method: 'PUT',
-            url: `/${resource.resourceType}`,
-            data: resource,
+            url: `/${cleanedResource.resourceType}`,
+            data: cleanedResource,
             params: searchParams,
         };
     }
 
-    if (resource.id) {
-        const versionId = resource.meta && resource.meta.versionId;
+    if (cleanedResource.id) {
+        const versionId = cleanedResource.meta && cleanedResource.meta.versionId;
 
         return {
             method: 'PUT',
-            url: `/${resource.resourceType}/${resource.id}`,
-            data: resource,
+            url: `/${cleanedResource.resourceType}/${cleanedResource.id}`,
+            data: cleanedResource,
             ...(versionId ? { headers: { 'If-Match': versionId } } : {}),
         };
     }
@@ -236,16 +258,24 @@ export async function findFHIRResource<R extends AidboxResource>(
     }
 }
 
-export async function saveFHIRResource<R extends AidboxResource>(resource: R): Promise<RemoteDataResult<WithId<R>>> {
-    return service(save(resource));
+export async function saveFHIRResource<R extends AidboxResource>(
+    resource: R,
+    dropNullsFromDicts: boolean = true
+): Promise<RemoteDataResult<WithId<R>>> {
+    return service(save(resource, dropNullsFromDicts));
 }
 
-export function save<R extends AidboxResource>(resource: R): AxiosRequestConfig {
+export function save<R extends AidboxResource>(resource: R, dropNullsFromDicts: boolean = true): AxiosRequestConfig {
     const versionId = resource.meta && resource.meta.versionId;
+    let cleanedResource = resource;
+    if (dropNullsFromDicts) {
+        cleanedResource = removeNullsFromDicts(cleanedResource);
+    }
+    cleanedResource = cleanEmptyValues(cleanedResource);
 
     return {
         method: resource.id ? 'PUT' : 'POST',
-        data: resource,
+        data: cleanedResource,
         url: `/${resource.resourceType}${resource.id ? '/' + resource.id : ''}`,
         ...(resource.id && versionId ? { headers: { 'If-Match': versionId } } : {}),
     };
@@ -253,7 +283,8 @@ export function save<R extends AidboxResource>(resource: R): AxiosRequestConfig 
 
 export async function saveFHIRResources<R extends AidboxResource>(
     resources: R[],
-    bundleType: 'transaction' | 'batch'
+    bundleType: 'transaction' | 'batch',
+    dropNullsFromDicts: boolean = true
 ): Promise<RemoteDataResult<Bundle<WithId<R>>>> {
     return service({
         method: 'POST',
@@ -261,14 +292,19 @@ export async function saveFHIRResources<R extends AidboxResource>(
         data: {
             type: bundleType,
             entry: resources.map((resource) => {
-                const versionId = resource.meta && resource.meta.versionId;
+                let cleanedResource = resource;
+                if (dropNullsFromDicts) {
+                    cleanedResource = removeNullsFromDicts(cleanedResource);
+                }
+                cleanedResource = cleanEmptyValues(cleanedResource);
+                const versionId = cleanedResource.meta && cleanedResource.meta.versionId;
 
                 return {
-                    resource,
+                    resource: cleanedResource,
                     request: {
-                        method: resource.id ? 'PUT' : 'POST',
-                        url: `/${resource.resourceType}${resource.id ? '/' + resource.id : ''}`,
-                        ...(resource.id && versionId ? { ifMatch: versionId } : {}),
+                        method: cleanedResource.id ? 'PUT' : 'POST',
+                        url: `/${cleanedResource.resourceType}${cleanedResource.id ? '/' + cleanedResource.id : ''}`,
+                        ...(cleanedResource.id && versionId ? { ifMatch: versionId } : {}),
                     },
                 };
             }),
@@ -395,7 +431,7 @@ export type ResourcesMap<T extends AidboxResource> = {
 export function extractBundleResources<T extends AidboxResource>(bundle: Bundle<T>): ResourcesMap<T> {
     const entriesByResourceType = {} as ResourcesMap<T>;
     const entries = bundle.entry || [];
-    entries.forEach(function(entry) {
+    entries.forEach(function (entry) {
         const type = entry.resource!.resourceType;
         if (!entriesByResourceType[type]) {
             entriesByResourceType[type] = [];
