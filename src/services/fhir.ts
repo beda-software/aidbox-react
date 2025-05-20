@@ -121,9 +121,10 @@ export function create<R extends AidboxResource>(
 
 export async function updateFHIRResource<R extends AidboxResource>(
     resource: R,
-    searchParams?: SearchParams
+    searchParams?: SearchParams,
+    dropNullsFromDicts = true
 ): Promise<RemoteDataResult<WithId<R>>> {
-    return service(update(resource, searchParams));
+    return service(update(resource, searchParams, dropNullsFromDicts));
 }
 
 export function update<R extends AidboxResource>(
