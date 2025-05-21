@@ -1,15 +1,3 @@
-// function isEmpty(data: any): boolean {
-//     if (Array.isArray(data)) {
-//         return data.length === 0;
-//     }
-
-//     if (typeof data === 'object' && data !== null) {
-//         return Object.keys(data).length === 0;
-//     }
-
-//     return false;
-// }
-
 function isEmptyObject(data: any) {
     return typeof data === 'object' && !Array.isArray(data) && data !== null && Object.keys(data).length === 0;
 }
