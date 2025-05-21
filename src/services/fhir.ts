@@ -95,9 +95,9 @@ function getInactiveSearchParam(resourceType: string) {
 export async function createFHIRResource<R extends AidboxResource>(
     resource: R,
     searchParams?: SearchParams,
-    dropNullsFromDicts = true
+    needToCleanResource = true
 ): Promise<RemoteDataResult<WithId<R>>> {
-    return service(create(resource, searchParams, dropNullsFromDicts));
+    return service(create(resource, searchParams, needToCleanResource));
 }
 
 export function create<R extends AidboxResource>(
@@ -121,9 +121,9 @@ export function create<R extends AidboxResource>(
 export async function updateFHIRResource<R extends AidboxResource>(
     resource: R,
     searchParams?: SearchParams,
-    dropNullsFromDicts = true
+    needToCleanResource = true
 ): Promise<RemoteDataResult<WithId<R>>> {
-    return service(update(resource, searchParams, dropNullsFromDicts));
+    return service(update(resource, searchParams, needToCleanResource));
 }
 
 export function update<R extends AidboxResource>(
@@ -259,9 +259,9 @@ export async function findFHIRResource<R extends AidboxResource>(
 
 export async function saveFHIRResource<R extends AidboxResource>(
     resource: R,
-    dropNullsFromDicts: boolean = true
+    needToCleanResource = true
 ): Promise<RemoteDataResult<WithId<R>>> {
-    return service(save(resource, dropNullsFromDicts));
+    return service(save(resource, needToCleanResource));
 }
 
 export function save<R extends AidboxResource>(resource: R, needToCleanResource = true): AxiosRequestConfig {
