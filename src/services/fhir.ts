@@ -2,7 +2,7 @@ import { AxiosRequestConfig } from 'axios';
 import { AidboxReference, AidboxResource, ValueSet, Bundle, BundleEntry, id } from 'shared/src/contrib/aidbox';
 
 import { isFailure, RemoteDataResult, success, failure } from '../libs/remoteData';
-import { cleanEmptyValues, removeNullsFromDicts } from '../utils/fhir';
+import { cleanObject } from '../utils/fhir';
 import { buildQueryParams } from './instance';
 import { SearchParams } from './search';
 import { service } from './service';
@@ -95,21 +95,20 @@ function getInactiveSearchParam(resourceType: string) {
 export async function createFHIRResource<R extends AidboxResource>(
     resource: R,
     searchParams?: SearchParams,
-    dropNullsFromDicts = true
+    needToCleanResource = true
 ): Promise<RemoteDataResult<WithId<R>>> {
-    return service(create(resource, searchParams, dropNullsFromDicts));
+    return service(create(resource, searchParams, needToCleanResource));
 }
 
 export function create<R extends AidboxResource>(
     resource: R,
     searchParams?: SearchParams,
-    dropNullsFromDicts = true
+    needToCleanResource = true
 ): AxiosRequestConfig {
     let cleanedResource = resource;
-    if (dropNullsFromDicts) {
-        cleanedResource = removeNullsFromDicts(cleanedResource);
+    if (needToCleanResource) {
+        cleanedResource = cleanObject(cleanedResource);
     }
-    cleanedResource = cleanEmptyValues(cleanedResource);
 
     return {
         method: 'POST',
@@ -122,21 +121,20 @@ export function create<R extends AidboxResource>(
 export async function updateFHIRResource<R extends AidboxResource>(
     resource: R,
     searchParams?: SearchParams,
-    dropNullsFromDicts = true
+    needToCleanResource = true
 ): Promise<RemoteDataResult<WithId<R>>> {
-    return service(update(resource, searchParams, dropNullsFromDicts));
+    return service(update(resource, searchParams, needToCleanResource));
 }
 
 export function update<R extends AidboxResource>(
     resource: R,
     searchParams?: SearchParams,
-    dropNullsFromDicts = true
+    needToCleanResource = true
 ): AxiosRequestConfig {
     let cleanedResource = resource;
-    if (dropNullsFromDicts) {
-        cleanedResource = removeNullsFromDicts(cleanedResource);
+    if (needToCleanResource) {
+        cleanedResource = cleanObject(cleanedResource);
     }
-    cleanedResource = cleanEmptyValues(cleanedResource);
 
     if (searchParams) {
         return {
@@ -261,18 +259,17 @@ export async function findFHIRResource<R extends AidboxResource>(
 
 export async function saveFHIRResource<R extends AidboxResource>(
     resource: R,
-    dropNullsFromDicts: boolean = true
+    needToCleanResource = true
 ): Promise<RemoteDataResult<WithId<R>>> {
-    return service(save(resource, dropNullsFromDicts));
+    return service(save(resource, needToCleanResource));
 }
 
-export function save<R extends AidboxResource>(resource: R, dropNullsFromDicts: boolean = true): AxiosRequestConfig {
-    const versionId = resource.meta && resource.meta.versionId;
+export function save<R extends AidboxResource>(resource: R, needToCleanResource = true): AxiosRequestConfig {
     let cleanedResource = resource;
-    if (dropNullsFromDicts) {
-        cleanedResource = removeNullsFromDicts(cleanedResource);
+    if (needToCleanResource) {
+        cleanedResource = cleanObject(cleanedResource);
     }
-    cleanedResource = cleanEmptyValues(cleanedResource);
+    const versionId = cleanedResource.meta && cleanedResource.meta.versionId;
 
     return {
         method: resource.id ? 'PUT' : 'POST',
@@ -285,7 +282,7 @@ export function save<R extends AidboxResource>(resource: R, dropNullsFromDicts: 
 export async function saveFHIRResources<R extends AidboxResource>(
     resources: R[],
     bundleType: 'transaction' | 'batch',
-    dropNullsFromDicts: boolean = true
+    needToCleanResource = true
 ): Promise<RemoteDataResult<Bundle<WithId<R>>>> {
     return service({
         method: 'POST',
@@ -294,10 +291,9 @@ export async function saveFHIRResources<R extends AidboxResource>(
             type: bundleType,
             entry: resources.map((resource) => {
                 let cleanedResource = resource;
-                if (dropNullsFromDicts) {
-                    cleanedResource = removeNullsFromDicts(cleanedResource);
+                if (needToCleanResource) {
+                    cleanedResource = cleanObject(cleanedResource);
                 }
-                cleanedResource = cleanEmptyValues(cleanedResource);
                 const versionId = cleanedResource.meta && cleanedResource.meta.versionId;
 
                 return {
