@@ -13,6 +13,7 @@ module.exports = [
                 file: packageJson.main,
                 format: 'cjs',
                 sourcemap: false,
+                interop: 'auto',
             },
             {
                 file: packageJson.module,
